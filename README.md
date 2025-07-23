@@ -1,4 +1,4 @@
-# 🚀 foolstack - Modern Django + Vue3 Dockerized Stack
+# 🚀 gelt - Modern Django + Vue3 Dockerized Stack
 
 A production-ready full-stack application template featuring Django REST API, Vue3 SPA, and Caddy reverse proxy and more - all containerized with Docker.
 
@@ -25,8 +25,8 @@ A production-ready full-stack application template featuring Django REST API, Vu
 
 ```bash
 # Clone and setup everything automatically
-git clone https://github.com/spaceCabbage/foolstack
-cd foolstack
+git clone https://github.com/spaceCabbage/gelt
+cd gelt
 make setup
 ```
 
@@ -43,7 +43,7 @@ This will:
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd foolstack
+cd gelt
 
 # Copy environment template
 cp .env.example .env
