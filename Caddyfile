@@ -1,0 +1,41 @@
+{
+    email {$CADDY_EMAIL}
+}
+
+# Development configuration
+(dev) {
+    tls internal
+}
+
+# Production configuration  
+(prod) {
+    # Auto HTTPS with Let's Encrypt
+}
+
+# Main domain - Vue frontend
+{$BASE_DOMAIN} {
+    @isDev expression {env.ENVIRONMENT} == "development"
+    import dev @isDev
+    
+    @isProd expression {env.ENVIRONMENT} == "production"
+    import prod @isProd
+    
+    # In development, proxy to Vue dev server
+    reverse_proxy @isDev client:{$VUE_PORT}
+    
+    # In production, serve built Vue files
+    root @isProd /srv/vue
+    try_files @isProd {path} /index.html
+    file_server @isProd
+}
+
+# API subdomain - Django backend
+api.{$BASE_DOMAIN} {
+    @isDevApi expression {env.ENVIRONMENT} == "development"
+    import dev @isDevApi
+    
+    @isProdApi expression {env.ENVIRONMENT} == "production"
+    import prod @isProdApi
+    
+    reverse_proxy server:{$DJANGO_PORT}
+}

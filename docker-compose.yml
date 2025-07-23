@@ -1,0 +1,69 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: gelt_server
+    env_file: .env
+    volumes:
+      - ./server:/app:delegated
+    ports:
+      - '${DJANGO_PORT:-8000}:8000'
+    networks:
+      - gelt_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request, os; urllib.request.urlopen(f'http://localhost:{os.getenv(\"DJANGO_PORT\", \"8000\")}/health/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: ${ENVIRONMENT:-development}
+    container_name: gelt_client
+    env_file: .env
+    volumes:
+      - ./client:/app:delegated
+      - /app/node_modules
+    ports:
+      - '${VUE_PORT:-5173}:${VUE_PORT:-5173}'
+    networks:
+      - gelt_network
+    environment:
+      - BASE_DOMAIN=${BASE_DOMAIN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - LOG_LEVEL=${LOG_LEVEL}
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: gelt_caddy
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./client/dist:/srv/vue:ro
+    networks:
+      - gelt_network
+    depends_on:
+      - server
+      - client
+    environment:
+      - BASE_DOMAIN=${BASE_DOMAIN}
+      - CADDY_EMAIL=${CADDY_EMAIL}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - VUE_PORT=${VUE_PORT}
+      - DJANGO_PORT=${DJANGO_PORT}
+
+networks:
+  gelt_network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

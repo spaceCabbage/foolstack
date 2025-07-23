@@ -1,0 +1,12 @@
+{
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    // root
+    "README.md": "CLAUDE.md, .dockerignore, .env.example, .gitattributes, .gitignore, Caddyfile, Makefile, docker-compose.yml",
+    // client
+    "package.json": ".editorconfig, .prettierrc.json, Dockerfile, eslint.config.js, vite.config.js, jsconfig.json, package-lock.json",
+    // server
+    "req.txt": "Dockerfile, .dockerignore, manage.py"
+  },
+  "explorer.sortOrder": "default"
+}
