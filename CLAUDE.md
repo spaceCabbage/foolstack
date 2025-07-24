@@ -119,9 +119,18 @@ When working on this project:
 ## Development Workflow
 
 1. **Quick Start**: Use `make setup` for automatic development environment setup
-2. **Hot Reload**: Both Django and Vue auto-reload on file changes
-3. **Database Migrations**: Always run `make migrate` after model changes
-4. **Dependencies**: Update `req.txt` or `package.json`, then rebuild containers
+2. **VSCode Integration**: Run `make vscode-setup` to create local Python venv for IDE features
+3. **Hot Reload**: Both Django and Vue auto-reload on file changes
+4. **Database Migrations**: Always run `make migrate` after model changes
+5. **Dependencies**: Update `pyproject.toml` or `package.json`, then rebuild containers
+
+### Dual Environment Setup
+
+This project uses a dual environment approach:
+- **Local .venv**: Created by `make vscode-setup` for VSCode Python interpreter and intellisense
+- **Docker**: Uses system Python (no venv) to avoid volume mount conflicts
+
+Both environments use the same Poetry dependencies, ensuring consistency.
 
 ## Production Deployment
 

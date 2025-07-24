@@ -2,7 +2,7 @@
 node_modules/
 .npm
 .bun
-bun.lockb
+# Note: bun.lockb is needed for reproducible builds, don't ignore it
 
 # Build outputs
 dist/

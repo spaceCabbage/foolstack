@@ -1,14 +1,15 @@
-.PHONY: help setup up down build build-clean logs shell-django shell-vue migrate migration test clean restart status poetry-install bun-install
+.PHONY: help setup up down build build-clean logs shell-django shell-vue migrate migration test clean restart status poetry-install bun-install vscode-setup
 
 # Default target
 help:
 	@echo "Available commands:"
 	@echo "  make setup           - Initial setup for new developers"
+	@echo "  make vscode-setup    - Set up local development environment for VSCode"
 	@echo "  make up              - Start all services"
 	@echo "  make down            - Stop all services"
 	@echo "  make build           - Smart rebuild with caching (recommended)"
 	@echo "  make build-clean     - Full rebuild without cache (slow, for debugging)"
-	@echo "  make poetry-install  - Generate Poetry lock file"
+	@echo "  make poetry-install  - Set up Poetry environment for VSCode"
 	@echo "  make bun-install     - Generate Bun lock file"
 	@echo "  make logs            - View logs from all services"
 	@echo "  make shell-django    - Open shell in Django container"
@@ -109,8 +110,9 @@ status:
 
 # Package manager commands
 poetry-install:
-	@echo "🔧 Generating Poetry lock file..."
+	@echo "🔧 Setting up Poetry environment and VSCode integration..."
 	cd server && poetry install
+	@echo "✅ Local .venv created for VSCode at server/.venv"
 
 bun-install:
 	@echo "🔧 Generating Bun lock file..."
@@ -129,3 +131,13 @@ prod-build:
 
 prod-up:
 	ENVIRONMENT=production docker-compose up -d
+
+# VSCode development setup
+vscode-setup:
+	@echo "🔧 Setting up local development environment for VSCode..."
+	@echo "📦 Installing Poetry dependencies locally..."
+	cd server && poetry install
+	@echo "✅ Python environment ready at: server/.venv/bin/python"
+	@echo ""
+	@echo "🎉 VSCode setup complete! The Python interpreter is configured."
+	@echo "   Reload VSCode window to activate the Python environment."

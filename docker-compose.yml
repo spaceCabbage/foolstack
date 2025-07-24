@@ -8,22 +8,13 @@ services:
     env_file: .env
     volumes:
       - ./server:/app:delegated
-      - /app/.venv
       - /app/__pycache__
     ports:
       - '${DJANGO_PORT:-8000}:8000'
     networks:
       - gelt_network
     healthcheck:
-      test:
-        [
-          'CMD',
-          'poetry',
-          'run',
-          'python',
-          '-c',
-          'import urllib.request, os; urllib.request.urlopen(f''http://localhost:{os.getenv("DJANGO_PORT", "8000")}/health/'')',
-        ]
+      test: ["CMD", "poetry", "run", "python", "-c", "import urllib.request, os; urllib.request.urlopen(f'http://localhost:{os.getenv(\"DJANGO_PORT\", \"8000\")}/health/')"]
       interval: 30s
       timeout: 10s
       retries: 3

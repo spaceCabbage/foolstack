@@ -1,3 +1,5 @@
 [virtualenvs]
 in-project = true
 prefer-active-python = true
+# This creates .venv locally for VSCode/IDE integration
+# Docker overrides with POETRY_VIRTUALENVS_CREATE=false to avoid conflicts

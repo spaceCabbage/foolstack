@@ -5,10 +5,10 @@ Simple, clean setup with colors and daily rotation.
 
 import os
 import sys
-from pathlib import Path
 from loguru import logger
 
 def setup_logging():
+    from core.settings import BASE_DIR
     """Configure loguru for Django with colors and rotation."""
     
     # Remove default logger
@@ -19,7 +19,8 @@ def setup_logging():
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     
     # Use /app/logs inside server directory 
-    log_dir = Path("/app/logs")
+    
+    log_dir = BASE_DIR / "logs"
     log_dir.mkdir(exist_ok=True)
     
     if environment == "development":

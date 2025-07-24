@@ -7,31 +7,27 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# System dependencies layer (cached until Dockerfile changes)
-RUN apt-get update && apt-get install -y \
-    gcc \
-    curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Minimal system dependencies - most Python packages are now wheel-based
+# Only install if you add packages requiring compilation later
 
-# Install Poetry (cached until Poetry version changes)
-RUN pip install poetry==1.7.1
+# Install Poetry and setuptools (required for pkg_resources in Python 3.13+)
+RUN pip install poetry==2.1.3 setuptools
 
-# Configure Poetry
+# Configure Poetry - use system Python to avoid venv issues with volume mounts
 ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VENV_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=false \
     POETRY_CACHE_DIR=/tmp/poetry_cache
 
 WORKDIR /app
 
 # Dependencies installation layer (cached until pyproject.toml/poetry.lock changes)
 COPY pyproject.toml poetry.lock* ./
-RUN poetry install --no-dev && rm -rf $POETRY_CACHE_DIR
+RUN poetry install --only main && rm -rf $POETRY_CACHE_DIR
 
 # Development stage
 FROM base AS development
 
-# Install dev dependencies
+# Install all dependencies (including dev)
 RUN poetry install && rm -rf $POETRY_CACHE_DIR
 
 # Copy source code (this layer changes frequently)
