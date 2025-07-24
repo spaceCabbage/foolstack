@@ -3,16 +3,25 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+      target: ${ENVIRONMENT:-development}
+      # Enable BuildKit features
+      cache_from:
+        - gelt_server:latest
+      cache_to:
+        - type=inline
     container_name: gelt_server
     env_file: .env
     volumes:
       - ./server:/app:delegated
+      # Exclude .venv and __pycache__ for better performance
+      - /app/.venv
+      - /app/__pycache__
     ports:
       - '${DJANGO_PORT:-8000}:8000'
     networks:
       - gelt_network
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request, os; urllib.request.urlopen(f'http://localhost:{os.getenv(\"DJANGO_PORT\", \"8000\")}/health/')"]
+      test: ["CMD", "poetry", "run", "python", "-c", "import urllib.request, os; urllib.request.urlopen(f'http://localhost:{os.getenv(\"DJANGO_PORT\", \"8000\")}/health/')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -23,11 +32,19 @@ services:
       context: ./client
       dockerfile: Dockerfile
       target: ${ENVIRONMENT:-development}
+      # Enable BuildKit features
+      cache_from:
+        - gelt_client:latest
+      cache_to:
+        - type=inline
     container_name: gelt_client
     env_file: .env
     volumes:
       - ./client:/app:delegated
+      # Exclude node_modules and build artifacts for better performance
       - /app/node_modules
+      - /app/dist
+      - /app/.bun
     ports:
       - '${VUE_PORT:-5173}:${VUE_PORT:-5173}'
     networks:

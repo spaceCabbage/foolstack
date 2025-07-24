@@ -1,4 +1,4 @@
-.PHONY: help setup up down build logs shell-django shell-vue migrate migration test clean restart status
+.PHONY: help setup up down build build-clean logs shell-django shell-vue migrate migration test clean restart status poetry-install bun-install
 
 # Default target
 help:
@@ -6,7 +6,10 @@ help:
 	@echo "  make setup           - Initial setup for new developers"
 	@echo "  make up              - Start all services"
 	@echo "  make down            - Stop all services"
-	@echo "  make build           - Full rebuild (no cache)"
+	@echo "  make build           - Smart rebuild with caching (recommended)"
+	@echo "  make build-clean     - Full rebuild without cache (slow, for debugging)"
+	@echo "  make poetry-install  - Generate Poetry lock file"
+	@echo "  make bun-install     - Generate Bun lock file"
 	@echo "  make logs            - View logs from all services"
 	@echo "  make shell-django    - Open shell in Django container"
 	@echo "  make shell-vue       - Open shell in Vue container"
@@ -64,9 +67,15 @@ up:
 down:
 	docker-compose down
 
-# Build containers (full rebuild, no cache)
+# Smart build with caching (recommended for daily use)
 build:
-	docker-compose build --no-cache
+	@echo "🚀 Building with optimizations and caching..."
+	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build
+
+# Full rebuild without cache (for debugging or fresh start)
+build-clean:
+	@echo "🧹 Full rebuild without cache (this will be slow)..."
+	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --no-cache
 
 # View logs
 logs:
@@ -81,16 +90,16 @@ shell-vue:
 
 # Django commands
 migrate:
-	docker-compose exec server python manage.py migrate
+	docker-compose exec server poetry run python manage.py migrate
 
 migration:
-	docker-compose exec server python manage.py makemigration
+	docker-compose exec server poetry run python manage.py makemigrations
 
 superuser:
-	docker-compose exec -it server python manage.py createsuperuser
+	docker-compose exec -it server poetry run python manage.py createsuperuser
 
 test:
-	docker-compose exec server python manage.py test
+	docker-compose exec server poetry run python manage.py test
 
 # Clean everything
 clean:
@@ -106,12 +115,21 @@ restart:
 status:
 	docker-compose ps
 
-# Development specific commands
+# Package manager commands
+poetry-install:
+	@echo "🔧 Generating Poetry lock file..."
+	cd server && poetry install
+
+bun-install:
+	@echo "🔧 Generating Bun lock file..."
+	cd client && bun install
+
+# Development specific commands  
 dev-install:
-	docker-compose exec client npm install
+	docker-compose exec client bun install
 
 dev-django-shell:
-	docker-compose exec server python manage.py shell
+	docker-compose exec server poetry run python manage.py shell
 
 # Production build
 prod-build:

@@ -1,124 +1,124 @@
-# 🚀 gelt - Modern Django + Vue3 Dockerized Stack
+<div align="center">
 
-A production-ready full-stack application template featuring Django REST API, Vue3 SPA, and Caddy reverse proxy and more - all containerized with Docker.
+# 🌟 Gelt
 
-## ✨ Features
+### *Modern Django + Vue3 Full-Stack Platform*
 
-- **🐍 Django REST API Backend** - Robust API with Django REST Framework
-- **⚡ Vue3 + Vite Frontend** - Lightning-fast modern frontend
-- **🔒 Caddy Reverse Proxy** - Automatic HTTPS with Let's Encrypt
-- **🐳 Docker Everything** - Fully containerized for consistency
-- **🔄 Hot Reload** - Development with live code updates
-- **🌍 Environment-Based Config** - Single `.env` file controls everything
-- **📦 Production Ready** - Optimized builds for deployment
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Django](https://img.shields.io/badge/Django-5.2.4-092E20?logo=django)](https://djangoproject.com/)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.0-4FC08D?logo=vue.js)](https://vuejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://docker.com/)
+
+**Production-ready full-stack web application platform with JWT authentication, Docker containerization, and automatic HTTPS**
+
+**📖 [Complete Documentation](./docs/README.md)** • **🚀 [Quick Start](#-quick-start)**
+
+</div>
+
+---
+
+## 🎯 What is Gelt?
+
+Gelt is a sophisticated, containerized full-stack application framework that combines Django's robust backend with Vue.js's modern frontend experience. Designed for rapid development and production deployment, it provides everything you need to build scalable web applications.
+
+### ⚡ Key Highlights
+
+- **🚀 One-Command Setup** - From zero to running in under 60 seconds
+- **🔐 JWT Authentication** - Email-based auth with custom user model built-in
+- **🐳 Fully Containerized** - Docker + Compose for consistent environments
+- **🔒 HTTPS by Default** - Automatic SSL certificates via Caddy proxy
+- **⚡ Hot Reload** - Instant updates during development
+- **📦 Production Ready** - Optimized builds and deployment strategies
+
+## 🛠️ Tech Stack
+
+
+| **Layer**     | **Technology**     | **Purpose**                                  |
+|:--------------|:-------------------|:---------------------------------------------|
+| **Frontend**  | Vue 3 + Vite       | Modern SPA with lightning-fast builds        |
+| **Backend**   | Django 5.2.4 + DRF | Robust REST API with admin interface         |
+| **Auth**      | JWT (Simple JWT)   | Stateless authentication with token rotation |
+| **Database**  | SQLite/PostgreSQL  | Flexible data storage                        |
+| **Proxy**     | Caddy 2.8          | Automatic HTTPS and reverse proxy            |
+| **Container** | Docker + Compose   | Consistent dev/prod environments             |
+
 
 
 ## 📋 Prerequisites
 
-- Docker & Docker Compose
-- Git
-- Make (optional but recommended)
+- **Docker** 20.10+ & **Docker Compose** 2.0+
+- **Git** 2.25+
+- **Make** (optional, for convenience commands)
 
 ## 🚀 Quick Start
 
-### For New Developers - One Command Setup
+### ⚡ One-Command Setup
 
 ```bash
-# Clone and setup everything automatically
-git clone https://github.com/spaceCabbage/gelt
+git clone https://github.com/yourusername/gelt.git
 cd gelt
 make setup
 ```
 
-This will:
-- Create `.env` with secure defaults
-- Generate a random Django secret key
-- Build all Docker containers
-- Start the services
-- Run database migrations
-- Prompt you to create a superuser
+This single command will:
+- ✅ Create secure environment configuration
+- ✅ Build and start all Docker services
+- ✅ Initialize database with migrations
+- ✅ Prompt you to create an admin user
 
-### Manual Setup (Alternative)
+### 🌐 Access Your Application
+
+| **Service**  | **URL**                         | **Purpose**      |
+|:-------------|:--------------------------------|:-----------------|
+| **Frontend** | http://localhost                | Main application |
+| **API**      | http://api.localhost:8000       | REST endpoints   |
+| **Admin**    | http://api.localhost:8000/admin | Django admin     |
+
+### 🛠️ Development Commands
 
 ```bash
-# Clone the repository
-git clone <your-repo-url>
+make up          # Start services
+make down        # Stop services
+make logs        # View logs
+make migrate     # Run migrations
+make superuser   # Create admin user
+make shell-django # Access Django container
+```
+
+## 📚 Documentation
+
+For comprehensive guides, API references, and advanced topics:
+
+**➡️ [View Complete Documentation](./docs/README.md)**
+
+### Quick Links
+
+- **[🔐 Authentication Guide](./docs/authentication.md)** - JWT implementation details
+- **[🛠️ API Reference](./docs/api-reference.md)** - Complete endpoint documentation  
+- **[🏗️ Architecture Overview](./docs/README.md#architecture-overview)** - System design deep-dive
+- **[🚢 Production Deployment](./docs/deployment.md)** - Scaling and deployment strategies
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](./docs/CONTRIBUTING.md) first.
+
+```bash
+git clone https://github.com/yourusername/gelt.git
 cd gelt
-
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your settings
-nano .env
-
-# Build and start all services
-make build
-make up
-
-# Run migrations
-make migrate
-
-# Create admin user
-make superuser
+git checkout -b feature/your-feature
+# Make changes, test, and submit PR
 ```
 
-### 4. Access Your App
+## 📄 License
 
-- **Frontend**: http://localhost (or https://yourdomain.com)
-- **API**: http://api.localhost (or https://api.yourdomain.com)
-- **Django Admin**: http://api.localhost/admin
+MIT License - see [LICENSE](./LICENSE) for details.
 
-## 🛠️ Development Workflow
+---
 
-### Common Commands
+<div align="center">
 
-```bash
-# View all available commands
-make help
+**⭐ Found this useful? Give it a star!**
 
-# Start/stop services
-make up
-make down
+[🐛 Issues](https://github.com/yourusername/gelt/issues) • [💬 Discussions](https://github.com/yourusername/gelt/discussions) • [📖 Documentation](./docs/README.md)
 
-# View logs
-make logs
-
-# Django operations
-make migrate       # Run migrations
-make migration     # Create new migrations
-make superuser     # Create admin user
-
-# Access containers
-make shell-django  # Django shell
-make shell-vue     # Vue shell
-
-# Development
-make dev-django-shell  # Django Python shell
-make dev-install       # Install Vue dependencies
-```
-
-## 🚢 Production Deployment
-
-### 1. Prepare Environment
-
-```bash
-# Update .env for production
-ENVIRONMENT=production
-BASE_DOMAIN=yourdomain.com
-DJANGO_SECRET_KEY=generate-a-secure-key
-DJANGO_DEBUG=False
-CADDY_EMAIL=your-email@domain.com
-```
-
-### 2. Deploy
-
-```bash
-# Build production images
-make prod-build
-
-# Start production services
-make prod-up
-
-# Run migrations
-make migrate
-```
+</div>

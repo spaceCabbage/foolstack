@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "gelt-server"
+version = "1.0.0"
+description = "Gelt Django Backend"
+authors = ["Yehuda Freedman <hudafreedman@gmail.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "5.2.4"
+djangorestframework = "3.14.0"
+djangorestframework-simplejwt = "5.3.0"
+django-cors-headers = "4.3.1"
+python-dotenv = "1.0.0"
+gunicorn = "21.2.0"
+loguru = "0.7.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest-django = "^4.7.0"
+black = "^23.12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+)/
+'''
