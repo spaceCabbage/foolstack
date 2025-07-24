@@ -1,12 +1,16 @@
 <template>
   <main class="h-screen w-screen flex items-center justify-center">
     <div>
-      <h1 class="text-9xl font-bold">GELT</h1>
-      <div class="text-center">
-        <span v-if="isLoading">loading</span>
-        <span v-else-if="isError">{{ error }}</span>
-        <span v-else>{{ data.status }}</span>
-      </div>
+      <h1
+        class="text-9xl font-bold text-shadow"
+        :class="{
+          'text-yellow-500': isLoading,
+          'text-red-500': isError || (data && data.status !== 'healthy'),
+          'text-green-500': !isLoading && !isError && data && data.status === 'healthy',
+        }"
+      >
+        GELT
+      </h1>
     </div>
   </main>
 </template>
@@ -15,7 +19,7 @@
 import { useQuery } from '@tanstack/vue-query'
 import { getHealth } from '@/apiClient/queries'
 
-const { data, isLoading, isError, error } = useQuery({
+const { data, isLoading, isError } = useQuery({
   queryFn: getHealth,
   queryKey: ['health'],
 })
