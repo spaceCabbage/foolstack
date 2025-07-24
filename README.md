@@ -4,7 +4,6 @@
 
 ### *Modern Django + Vue3 Full-Stack Platform*
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Django](https://img.shields.io/badge/Django-5.2.4-092E20?logo=django)](https://djangoproject.com/)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.0-4FC08D?logo=vue.js)](https://vuejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://docker.com/)
@@ -77,11 +76,11 @@ This single command will:
 ### 🛠️ Development Commands
 
 ```bash
-make up          # Start services
-make down        # Stop services
-make logs        # View logs
-make migrate     # Run migrations
-make superuser   # Create admin user
+make up           # Start services
+make down         # Stop services
+make logs         # View logs
+make migrate      # Run migrations
+make superuser    # Create admin user
 make shell-django # Access Django container
 ```
 
@@ -97,28 +96,3 @@ For comprehensive guides, API references, and advanced topics:
 - **[🛠️ API Reference](./docs/api-reference.md)** - Complete endpoint documentation  
 - **[🏗️ Architecture Overview](./docs/README.md#architecture-overview)** - System design deep-dive
 - **[🚢 Production Deployment](./docs/deployment.md)** - Scaling and deployment strategies
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](./docs/CONTRIBUTING.md) first.
-
-```bash
-git clone https://github.com/yourusername/gelt.git
-cd gelt
-git checkout -b feature/your-feature
-# Make changes, test, and submit PR
-```
-
-## 📄 License
-
-MIT License - see [LICENSE](./LICENSE) for details.
-
----
-
-<div align="center">
-
-**⭐ Found this useful? Give it a star!**
-
-[🐛 Issues](https://github.com/yourusername/gelt/issues) • [💬 Discussions](https://github.com/yourusername/gelt/discussions) • [📖 Documentation](./docs/README.md)
-
-</div>

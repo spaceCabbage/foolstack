@@ -1,5 +1,5 @@
 # Multi-stage build for optimal caching and performance
-FROM python:3.13.5-slim as base
+FROM python:3.13.5-slim AS base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
