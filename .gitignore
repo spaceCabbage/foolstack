@@ -69,4 +69,4 @@ media/
 .env
 .claude
 logs/*
-data/*
+server/data/*
