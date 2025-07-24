@@ -45,7 +45,7 @@ Gelt is a sophisticated, containerized full-stack application framework that com
 
 ## 📋 Prerequisites
 
-- **Docker** 20.10+ & **Docker Compose** 2.0+
+- **Docker** 20.10+ & **Docker Compose** 2.0+ (I use podman, btw)
 - **Git** 2.25+
 - **Make** (optional, for convenience commands)
 

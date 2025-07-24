@@ -41,12 +41,10 @@ wheels/
 *.egg
 
 # Virtual environments (Poetry manages these)
-venv/
 .venv/
 env/
 ENV/
 env.bak/
-venv.bak/
 
 # Poetry
 # Note: poetry.lock should be committed to ensure consistent dependencies
