@@ -60,14 +60,11 @@ htmlcov/
 # Django
 *.log
 local_settings.py
-server/data/db.sqlite3.bak
-server/data/db.sqlite3.bak
 db.sqlite3-journal
 media/
 
 
 .env
 .claude
-logs/*
-server/data/*
-server/logs/*
+server/data/*.sqlite3
+server/logs/*.log
