@@ -1,4 +1,4 @@
-.PHONY: help setup up down build build-clean logs shell-django shell-vue migrate migration test clean restart status poetry-install bun-install vscode-setup
+.PHONY: help setup up down build build-clean logs shell-django shell-vue migrate app test clean restart status poetry-install bun-install vscode-setup
 
 # Default target
 help:
@@ -15,7 +15,8 @@ help:
 	@echo "  make shell-django    - Open shell in Django container"
 	@echo "  make shell-vue       - Open shell in Vue container"
 	@echo "  make migrate         - Run Django migrations"
-	@echo "  make migration       - Create Django migrations"
+	@echo "  make migrations       - Create Django migrations"
+	@echo "  make app <name>      - Create a new Django app"
 	@echo "  make superuser       - Create Django superuser"
 	@echo "  make test            - Run Django tests"
 	@echo "  make clean           - Remove all containers and volumes"
@@ -85,8 +86,19 @@ shell-vue:
 migrate:
 	docker-compose exec server poetry run python manage.py migrate
 
-migration:
+migrations:
 	docker-compose exec server poetry run python manage.py makemigrations
+
+app:
+	@if [ -z "$(word 2,$(MAKECMDGOALS))" ]; then \
+		echo "Error: Please specify an app name using 'make app myapp'"; \
+		exit 1; \
+	fi
+	docker-compose exec server poetry run python manage.py startapp $(word 2,$(MAKECMDGOALS))
+
+%:
+	@:
+
 
 superuser:
 	docker-compose exec -it server poetry run python manage.py createsuperuser

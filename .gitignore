@@ -70,3 +70,4 @@ media/
 .claude
 logs/*
 server/data/*
+server/logs/*
