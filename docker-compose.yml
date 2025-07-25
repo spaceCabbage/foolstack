@@ -1,10 +1,12 @@
+name: foolstack
+
 services:
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
       target: ${ENVIRONMENT:-development}
-    container_name: gelt_server
+    container_name: foolstack_server
     env_file: .env
     volumes:
       - ./server:/app:delegated
@@ -12,9 +14,17 @@ services:
     ports:
       - '${DJANGO_PORT:-8000}:8000'
     networks:
-      - gelt_network
+      - default
     healthcheck:
-      test: ["CMD", "poetry", "run", "python", "-c", "import urllib.request, os; urllib.request.urlopen(f'http://localhost:{os.getenv(\"DJANGO_PORT\", \"8000\")}/health/')"]
+      test:
+        [
+          'CMD',
+          'poetry',
+          'run',
+          'python',
+          '-c',
+          'import urllib.request, os; urllib.request.urlopen(f''http://localhost:{os.getenv("DJANGO_PORT", "8000")}/health/'')',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -25,7 +35,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
       target: ${ENVIRONMENT:-development}
-    container_name: gelt_client
+    container_name: foolstack_client
     env_file: .env
     volumes:
       - ./client:/app:delegated
@@ -36,7 +46,7 @@ services:
     ports:
       - '${VUE_PORT:-5173}:${VUE_PORT:-5173}'
     networks:
-      - gelt_network
+      - default
     environment:
       - BASE_DOMAIN=${BASE_DOMAIN}
       - ENVIRONMENT=${ENVIRONMENT}
@@ -44,7 +54,7 @@ services:
 
   caddy:
     image: caddy:2.8-alpine
-    container_name: gelt_caddy
+    container_name: foolstack_caddy
     ports:
       - '80:80'
       - '443:443'
@@ -54,7 +64,7 @@ services:
       - caddy_config:/config
       - ./client/dist:/srv/vue:ro
     networks:
-      - gelt_network
+      - default
     depends_on:
       - server
       - client
@@ -66,7 +76,7 @@ services:
       - DJANGO_PORT=${DJANGO_PORT}
 
 networks:
-  gelt_network:
+  default:
     driver: bridge
 
 volumes:

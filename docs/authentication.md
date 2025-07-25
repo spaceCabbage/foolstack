@@ -1,6 +1,6 @@
 # Authentication System
 
-The Gelt project uses JWT (JSON Web Tokens) for authentication with a custom user model that uses email addresses instead of usernames.
+The Foolstack project uses JWT (JSON Web Tokens) for authentication with a custom user model that uses email addresses instead of usernames.
 
 ## Overview
 

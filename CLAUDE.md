@@ -1,6 +1,6 @@
-# Claude Assistant Instructions for Gelt Project
+# Claude Assistant Instructions for Foolstack Projects
 
-This document provides specific instructions for Claude or other AI assistants working on this Django + Vue3 dockerized project.
+This document provides specific instructions for Claude or other AI assistants working on projects based on the Foolstack template (Django + Vue3 dockerized application).
 
 ## Project Overview
 
@@ -25,15 +25,18 @@ The entire stack is controlled by these key variables in `.env`:
 ```env
 ENVIRONMENT=development|production  # Controls debug mode, CORS, etc.
 BASE_DOMAIN=localhost              # Base for all domain configuration
-CLIENT_PORT=3000                   # Vue dev server port (referenced as VUE_PORT)
+VUE_PORT=5173                      # Vue dev server port
+DJANGO_PORT=8000                   # Django server port
 ```
 
 ### Service Names
 
 When referencing containers in commands or configurations:
-- Django container: `server` (container name: `gelt_server`)
-- Vue container: `client` (container name: `gelt_client`)
-- Caddy container: `caddy` (container name: `gelt_caddy`)
+- Django container: `server`
+- Vue container: `client`
+- Caddy container: `caddy`
+
+Note: Container names may be prefixed with the project name (e.g., `myproject_server`)
 
 ### File Paths
 
@@ -61,14 +64,19 @@ This eliminates manual configuration errors and ensures consistent development e
 
 ### Adding Django Apps
 
-1. Create app in server directory:
+Use the make command:
+```bash
+make app myappname
+```
+
+Or manually:
 ```bash
 make shell-django
 cd /app
-python manage.py startapp appname
+python manage.py startapp myappname
 ```
 
-2. Update `INSTALLED_APPS` in `server/core/settings.py`
+Don't forget to update `INSTALLED_APPS` in `server/core/settings.py`
 
 ### Adding API Endpoints
 
@@ -92,7 +100,7 @@ const apiUrl = import.meta.env.VITE_API_URL
 ### CORS Settings
 
 CORS is automatically configured based on environment:
-- **Development**: Allows `localhost:3000`, `BASE_DOMAIN:3000`
+- **Development**: Allows `localhost:5173`, `BASE_DOMAIN:5173`
 - **Production**: Allows `https://BASE_DOMAIN`, `https://www.BASE_DOMAIN`
 
 ### Django Settings
@@ -103,9 +111,17 @@ CORS is automatically configured based on environment:
 
 ### Makefile Commands
 
-Custom commands have been simplified:
-- `make migration` → runs `makemigrations`
-- `make superuser` → runs `createsuperuser`
+Essential commands:
+- `make setup` → Complete initial setup
+- `make up/down` → Start/stop services
+- `make app <name>` → Create new Django app
+- `make migrations` → Create database migrations
+- `make migrate` → Apply migrations
+- `make superuser` → Create admin user
+- `make shell-django` → Access Django container
+- `make shell-vue` → Access Vue container
+- `make logs` → View all logs
+- `make test` → Run tests
 
 ## Security Considerations
 
@@ -114,7 +130,8 @@ When working on this project:
 1. **Never commit .env file** - It's gitignored for a reason
 2. **Generate new SECRET_KEY** for production deployments
 3. **Review CORS settings** before deploying
-4. **Default REST permissions** are `AllowAny` - implement proper authentication
+4. **Default REST permissions** may be `AllowAny` - implement proper authentication
+5. **Update allowed hosts** for production domains
 
 ## Development Workflow
 
@@ -136,8 +153,9 @@ Both environments use the same Poetry dependencies, ensuring consistency.
 
 1. Set `ENVIRONMENT=production` in `.env`
 2. Update `BASE_DOMAIN` to actual domain
-3. Caddy will auto-provision SSL certificates
-4. Consider switching to PostgreSQL for production
+3. Generate new `DJANGO_SECRET_KEY`
+4. Caddy will auto-provision SSL certificates
+5. Consider switching to PostgreSQL for production
 
 ## Debugging Tips
 
@@ -151,22 +169,25 @@ Both environments use the same Poetry dependencies, ensuring consistency.
 
 - Django tests: `make test`
 - Vue tests: `make shell-vue` then `npm run test`
+- API testing: Use the Django test client or tools like pytest
 
 ## File Structure Conventions
 
 ```
 server/
-├── core/           # Django project settings
-├── apps/           # Django applications
-├── static/         # Static files (if any)
-└── req.txt         # Python dependencies
+├── core/              # Django project settings
+├── authentication/    # User auth app (included in template)
+├── [your apps]/       # Your Django applications
+├── pyproject.toml     # Python dependencies (Poetry)
+└── manage.py
 
 client/
 ├── src/
-│   ├── components/ # Vue components
-│   ├── views/      # Vue pages
-│   └── api/        # API integration
-└── package.json    # Node dependencies
+│   ├── components/    # Vue components
+│   ├── views/         # Vue pages
+│   ├── stores/        # Pinia state management
+│   └── api/           # API client
+└── package.json       # JS dependencies
 ```
 
 ## Notes for Modifications
@@ -174,6 +195,17 @@ client/
 1. **Dockerfile Changes**: Rebuild with `make build`
 2. **Environment Changes**: Restart with `make restart`
 3. **Database Schema**: Run migrations after model changes
-4. **New Dependencies**: Update req.txt/package.json and rebuild
+4. **New Dependencies**: Update pyproject.toml/package.json and rebuild
+5. **Adding Services**: Update docker-compose.yml and document changes
 
-Remember: This setup prioritizes developer experience with hot-reload and simple configuration while remaining production-ready.
+## AI Assistant Best Practices
+
+When assisting with this codebase:
+
+1. **Always check existing patterns** before implementing new features
+2. **Use the Makefile commands** instead of raw docker-compose
+3. **Follow the established file structure** for consistency
+4. **Test changes in Docker** to ensure production compatibility
+5. **Update documentation** when adding new features
+
+Remember: This setup prioritizes developer experience with hot-reload and simple configuration while remaining production-ready. The template provides a solid foundation - build upon it rather than restructuring it.

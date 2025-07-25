@@ -1,6 +1,6 @@
 # API Reference
 
-Complete API documentation for the Gelt project.
+Complete API documentation for the Foolstack project.
 
 ## Base URL
 - **Development**: `http://api.localhost:8000`

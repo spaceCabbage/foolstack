@@ -1,10 +1,10 @@
 <div align="center">
 
-# 📚 Gelt Documentation Hub
+# 📚 Foolstack Documentation Hub
 
 ### *Comprehensive Developer Resources & Technical Guides*
 
-*Everything you need to master the Gelt platform*
+*Everything you need to master the Foolstack platform*
 
 ---
 
@@ -16,17 +16,17 @@
 
 ## 🎯 Overview
 
-Welcome to the **Gelt Documentation Hub** – your comprehensive resource for building, deploying, and scaling enterprise-grade web applications. This documentation covers every aspect of the platform, from initial setup to advanced production deployment strategies.
+Welcome to the **Foolstack Documentation Hub** – your comprehensive resource for building, deploying, and scaling enterprise-grade web applications. This documentation covers every aspect of the platform, from initial setup to advanced production deployment strategies.
 
 <div align="center">
 
 ### 🚀 **Quick Navigation**
 
-| 🎪 **For New Developers** | 🏗️ **For Architects** | 🔧 **For DevOps** |
-|:-------------------------|:---------------------|:-------------------|
-| [🚀 Quick Start Guide](../README.md#-quick-start) | [🏗️ System Architecture](#-architecture-overview) | [🚢 Deployment Guide](./deployment.md) |
-| [🎓 Tutorial Series](./tutorials/) | [📊 Performance Optimization](./performance.md) | [📊 Monitoring & Observability](./monitoring.md) |
-| [🐛 Troubleshooting](./troubleshooting.md) | [🔌 API Design Patterns](./api-patterns.md) | [🔒 Security Hardening](./security-hardening.md) |
+| 🎪 **For New Developers**                         | 🏗️ **For Architects**                             | 🔧 **For DevOps**                                |
+|:-------------------------------------------------|:-------------------------------------------------|:------------------------------------------------|
+| [🚀 Quick Start Guide](../README.md#-quick-start) | [🏗️ System Architecture](#-architecture-overview) | [🚢 Deployment Guide](./deployment.md)           |
+| [🎓 Tutorial Series](./tutorials/)                | [📊 Performance Optimization](./performance.md)   | [📊 Monitoring & Observability](./monitoring.md) |
+| [🐛 Troubleshooting](./troubleshooting.md)        | [🔌 API Design Patterns](./api-patterns.md)       | [🔒 Security Hardening](./security-hardening.md) |
 
 </div>
 
@@ -71,13 +71,13 @@ Welcome to the **Gelt Documentation Hub** – your comprehensive resource for bu
 
 <div align="center">
 
-| 📚 **Resource** | 🎯 **Focus Area** | 🛠️ **Complexity Level** | 📋 **Status** |
-|:----------------|:------------------|:------------------------|:--------------|
-| **[🔐 Authentication System](./authentication.md)** | JWT, Custom User Model | 🟢 Beginner | ✅ Complete |
-| **[🛠️ API Reference](./api-reference.md)** | REST Endpoints | 🟡 Intermediate | ✅ Complete |
-| **[💾 Database Models](./models.md)** | Data Architecture | 🟡 Intermediate | 🚧 In Progress |
-| **[🔌 Custom Endpoints](./custom-endpoints.md)** | Advanced API Design | 🔴 Advanced | 📝 Planned |
-| **[⚡ Performance Tuning](./backend-performance.md)** | Optimization | 🔴 Advanced | 📝 Planned |
+| 📚 **Resource**                                       | 🎯 **Focus Area**       | 🛠️ **Complexity Level** | 📋 **Status**  |
+|:-----------------------------------------------------|:-----------------------|:-----------------------|:--------------|
+| **[🔐 Authentication System](./authentication.md)**   | JWT, Custom User Model | 🟢 Beginner             | ✅ Complete    |
+| **[🛠️ API Reference](./api-reference.md)**            | REST Endpoints         | 🟡 Intermediate         | ✅ Complete    |
+| **[💾 Database Models](./models.md)**                 | Data Architecture      | 🟡 Intermediate         | 🚧 In Progress |
+| **[🔌 Custom Endpoints](./custom-endpoints.md)**      | Advanced API Design    | 🔴 Advanced             | 📝 Planned     |
+| **[⚡ Performance Tuning](./backend-performance.md)** | Optimization           | 🔴 Advanced             | 📝 Planned     |
 
 </div>
 
@@ -85,13 +85,13 @@ Welcome to the **Gelt Documentation Hub** – your comprehensive resource for bu
 
 <div align="center">
 
-| 📚 **Resource** | 🎯 **Focus Area** | 🛠️ **Complexity Level** | 📋 **Status** |
-|:----------------|:------------------|:------------------------|:--------------|
-| **[⚡ Vue3 Setup Guide](./frontend-setup.md)** | Component Architecture | 🟢 Beginner | 📝 Planned |
-| **[🔌 API Integration](./api-integration.md)** | HTTP Client Setup | 🟡 Intermediate | 📝 Planned |
-| **[🎨 UI/UX Patterns](./ui-patterns.md)** | Design System | 🟡 Intermediate | 📝 Planned |
-| **[📱 PWA Configuration](./pwa-setup.md)** | Progressive Web App | 🔴 Advanced | 📝 Planned |
-| **[🚀 Performance Optimization](./frontend-performance.md)** | Bundle Optimization | 🔴 Advanced | 📝 Planned |
+| 📚 **Resource**                                              | 🎯 **Focus Area**       | 🛠️ **Complexity Level** | 📋 **Status** |
+|:------------------------------------------------------------|:-----------------------|:-----------------------|:-------------|
+| **[⚡ Vue3 Setup Guide](./frontend-setup.md)**               | Component Architecture | 🟢 Beginner             | 📝 Planned    |
+| **[🔌 API Integration](./api-integration.md)**               | HTTP Client Setup      | 🟡 Intermediate         | 📝 Planned    |
+| **[🎨 UI/UX Patterns](./ui-patterns.md)**                    | Design System          | 🟡 Intermediate         | 📝 Planned    |
+| **[📱 PWA Configuration](./pwa-setup.md)**                   | Progressive Web App    | 🔴 Advanced             | 📝 Planned    |
+| **[🚀 Performance Optimization](./frontend-performance.md)** | Bundle Optimization    | 🔴 Advanced             | 📝 Planned    |
 
 </div>
 
@@ -99,13 +99,13 @@ Welcome to the **Gelt Documentation Hub** – your comprehensive resource for bu
 
 <div align="center">
 
-| 📚 **Resource** | 🎯 **Focus Area** | 🛠️ **Complexity Level** | 📋 **Status** |
-|:----------------|:------------------|:------------------------|:--------------|
-| **[🐳 Docker Configuration](./docker-guide.md)** | Containerization | 🟡 Intermediate | 📝 Planned |
-| **[🚢 Production Deployment](./deployment.md)** | Scaling & Deployment | 🔴 Advanced | 📝 Planned |
-| **[📊 Monitoring & Logging](./monitoring.md)** | Observability | 🔴 Advanced | 📝 Planned |
-| **[🔒 Security Hardening](./security-hardening.md)** | Production Security | 🔴 Advanced | 📝 Planned |
-| **[⚡ CI/CD Pipelines](./cicd.md)** | Automation | 🔴 Advanced | 📝 Planned |
+| 📚 **Resource**                                      | 🎯 **Focus Area**     | 🛠️ **Complexity Level** | 📋 **Status** |
+|:----------------------------------------------------|:---------------------|:-----------------------|:-------------|
+| **[🐳 Docker Configuration](./docker-guide.md)**     | Containerization     | 🟡 Intermediate         | 📝 Planned    |
+| **[🚢 Production Deployment](./deployment.md)**      | Scaling & Deployment | 🔴 Advanced             | 📝 Planned    |
+| **[📊 Monitoring & Logging](./monitoring.md)**       | Observability        | 🔴 Advanced             | 📝 Planned    |
+| **[🔒 Security Hardening](./security-hardening.md)** | Production Security  | 🔴 Advanced             | 📝 Planned    |
+| **[⚡ CI/CD Pipelines](./cicd.md)**                  | Automation           | 🔴 Advanced             | 📝 Planned    |
 
 </div>
 
@@ -255,14 +255,14 @@ graph TB
 
 <div align="center">
 
-| 🛠️ **Tool Category** | 📋 **Recommended Tools** | 🎯 **Purpose** |
-|:---------------------|:-------------------------|:--------------|
-| **🏗️ Backend Development** | Django Debug Toolbar, Django Extensions | API debugging & optimization |
-| **🎨 Frontend Development** | Vue DevTools, Vite HMR | Component debugging & hot reload |
-| **🐳 Container Management** | Docker Desktop, Portainer | Container orchestration & monitoring |
-| **📊 Database Management** | DB Browser for SQLite, pgAdmin | Database administration |
-| **🔍 Testing & QA** | Pytest, Jest, Cypress | Automated testing frameworks |
-| **📈 Performance Monitoring** | Django Silk, Lighthouse | Performance profiling & analysis |
+| 🛠️ **Tool Category**          | 📋 **Recommended Tools**                 | 🎯 **Purpose**                        |
+|:-----------------------------|:----------------------------------------|:-------------------------------------|
+| **🏗️ Backend Development**    | Django Debug Toolbar, Django Extensions | API debugging & optimization         |
+| **🎨 Frontend Development**   | Vue DevTools, Vite HMR                  | Component debugging & hot reload     |
+| **🐳 Container Management**   | Docker Desktop, Portainer               | Container orchestration & monitoring |
+| **📊 Database Management**    | DB Browser for SQLite, pgAdmin          | Database administration              |
+| **🔍 Testing & QA**           | Pytest, Jest, Cypress                   | Automated testing frameworks         |
+| **📈 Performance Monitoring** | Django Silk, Lighthouse                 | Performance profiling & analysis     |
 
 </div>
 
@@ -310,8 +310,8 @@ We maintain high-quality documentation through:
 
 ```bash
 # 1️⃣ Fork and clone documentation
-git clone https://github.com/yourusername/gelt.git
-cd gelt/docs
+git clone https://github.com/yourusername/foolstack.git
+cd foolstack/docs
 
 # 2️⃣ Create documentation branch
 git checkout -b docs/improve-auth-guide
@@ -338,12 +338,12 @@ git push origin docs/improve-auth-guide
 
 <div align="center">
 
-| 🎯 **Issue Type** | 📍 **Best Resource** | ⏱️ **Response Time** |
-|:------------------|:---------------------|:---------------------|
-| **🐛 Bug Reports** | [GitHub Issues](https://github.com/yourusername/gelt/issues) | 1-2 business days |
-| **❓ General Questions** | [GitHub Discussions](https://github.com/yourusername/gelt/discussions) | Community-driven |
-| **💡 Feature Requests** | [GitHub Issues](https://github.com/yourusername/gelt/issues) | Weekly review |
-| **🚀 Urgent Production Issues** | [Priority Support](mailto:support@gelt.dev) | 4-6 hours |
+| 🎯 **Issue Type**               | 📍 **Best Resource**                                                         | ⏱️ **Response Time** |
+|:-------------------------------|:----------------------------------------------------------------------------|:--------------------|
+| **🐛 Bug Reports**              | [GitHub Issues](https://github.com/yourusername/foolstack/issues)           | 1-2 business days   |
+| **❓ General Questions**        | [GitHub Discussions](https://github.com/yourusername/foolstack/discussions) | Community-driven    |
+| **💡 Feature Requests**         | [GitHub Issues](https://github.com/yourusername/foolstack/issues)           | Weekly review       |
+| **🚀 Urgent Production Issues** | [Priority Support](mailto:support@foolstack.dev)                            | 4-6 hours           |
 
 </div>
 
@@ -351,8 +351,8 @@ git push origin docs/improve-auth-guide
 
 Found an issue with the documentation? Help us improve:
 
-- **📝 [Suggest Improvements](https://github.com/yourusername/gelt/issues/new?template=documentation.md)**
-- **🔍 [Report Missing Information](https://github.com/yourusername/gelt/discussions)**
+- **📝 [Suggest Improvements](https://github.com/yourusername/foolstack/issues/new?template=documentation.md)**
+- **🔍 [Report Missing Information](https://github.com/yourusername/foolstack/discussions)**
 - **⭐ [Contribute Examples](./contributing.md)**
 
 ---
@@ -363,6 +363,6 @@ Found an issue with the documentation? Help us improve:
 
 *This documentation is continuously updated. Last updated: $(date)*
 
-[⬆️ Back to Top](#-gelt-documentation-hub) • [🏠 Main README](../README.md) • [🤝 Contributing](./contributing.md)
+[⬆️ Back to Top](#-foolstack-documentation-hub) • [🏠 Main README](../README.md) • [🤝 Contributing](./contributing.md)
 
 </div>

@@ -10,8 +10,8 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 # Minimal system dependencies - most Python packages are now wheel-based
 # Only install if you add packages requiring compilation later
 
-# Install Poetry and setuptools (required for pkg_resources in Python 3.13+)
-RUN pip install poetry==2.1.3 setuptools
+# Install Poetry and (required for pkg_resources in Python 3.13+)
+RUN pip install poetry==2.1.3 
 
 # Configure Poetry - use system Python to avoid venv issues with volume mounts
 ENV POETRY_NO_INTERACTION=1 \

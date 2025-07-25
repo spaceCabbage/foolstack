@@ -9,7 +9,7 @@
           'text-green-500': !isLoading && !isError && data && data.status === 'healthy',
         }"
       >
-        GELT
+        FOOLSTACK
       </h1>
     </div>
   </main>

@@ -1,98 +1,190 @@
-<div align="center">
+# 🚀 Foolstack - Full Stack Django + Vue3 Template
 
-# 🌟 Gelt
+A production-ready, batteries-included full stack web application template featuring Django REST API, Vue 3 SPA, Docker containerization, and automatic SSL with Caddy.
 
-### *Modern Django + Vue3 Full-Stack Platform*
+## 🎯 Why Foolstack?
 
-[![Django](https://img.shields.io/badge/Django-5.2.4-092E20?logo=django)](https://djangoproject.com/)
-[![Vue.js](https://img.shields.io/badge/Vue.js-3.0-4FC08D?logo=vue.js)](https://vuejs.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://docker.com/)
+Foolstack eliminates the tedious setup of a modern full-stack application by providing:
 
-**Production-ready full-stack web application platform with JWT authentication, Docker containerization, and automatic HTTPS**
+- **Zero-config development environment** - One command to start developing
+- **Production-ready from day one** - SSL, CORS, security headers all configured
+- **Modern tech stack** - Django 5.1, Vue 3, Vite, Docker, Caddy
+- **Developer experience focused** - Hot reload, VSCode integration, comprehensive Makefile
+- **Best practices built-in** - JWT auth, environment-based config, proper project structure
 
-**📖 [Complete Documentation](./docs/README.md)** • **🚀 [Quick Start](#-quick-start)**
+## 🏗️ Tech Stack
 
-</div>
-
----
-
-## 🎯 What is Gelt?
-
-Gelt is a sophisticated, containerized full-stack application framework that combines Django's robust backend with Vue.js's modern frontend experience. Designed for rapid development and production deployment, it provides everything you need to build scalable web applications.
-
-### ⚡ Key Highlights
-
-- **🚀 One-Command Setup** - From zero to running in under 60 seconds
-- **🔐 JWT Authentication** - Email-based auth with custom user model built-in
-- **🐳 Fully Containerized** - Docker + Compose for consistent environments
-- **🔒 HTTPS by Default** - Automatic SSL certificates via Caddy proxy
-- **⚡ Hot Reload** - Instant updates during development
-- **📦 Production Ready** - Optimized builds and deployment strategies
-
-## 🛠️ Tech Stack
-
-
-| **Layer**     | **Technology**     | **Purpose**                                  |
-|:--------------|:-------------------|:---------------------------------------------|
-| **Frontend**  | Vue 3 + Vite       | Modern SPA with lightning-fast builds        |
-| **Backend**   | Django 5.2.4 + DRF | Robust REST API with admin interface         |
-| **Auth**      | JWT (Simple JWT)   | Stateless authentication with token rotation |
-| **Database**  | SQLite/PostgreSQL  | Flexible data storage                        |
-| **Proxy**     | Caddy 2.8          | Automatic HTTPS and reverse proxy            |
-| **Container** | Docker + Compose   | Consistent dev/prod environments             |
-
-
-
-## 📋 Prerequisites
-
-- **Docker** 20.10+ & **Docker Compose** 2.0+ (I use podman, btw)
-- **Git** 2.25+
-- **Make** (optional, for convenience commands)
+| Component          | Technology                       | Purpose                                 |
+|--------------------|----------------------------------|-----------------------------------------|
+| Backend            | Django 5.1 + DRF                 | REST API with JWT authentication        |
+| Frontend           | Vue 3 + Vite                     | Modern SPA with hot module replacement  |
+| Database           | SQLite (dev) / PostgreSQL (prod) | Simple development, scalable production |
+| Web Server         | Caddy                            | Automatic HTTPS, reverse proxy          |
+| Container          | Docker + Docker Compose          | Consistent environments                 |
+| Package Management | Poetry (Python) + Bun (JS)       | Modern dependency management            |
 
 ## 🚀 Quick Start
 
-### ⚡ One-Command Setup
+### Using as a Template
 
-```bash
-git clone https://github.com/yourusername/gelt.git
-cd gelt
-make setup
-```
+1. **Use this template on GitHub**:
+   - Click "Use this template" button
+   - Create a new repository
+   - Clone your new repo
 
-This single command will:
-- ✅ Create secure environment configuration
-- ✅ Build and start all Docker services
-- ✅ Initialize database with migrations
-- ✅ Prompt you to create an admin user
+2. **Or use GitHub CLI**:
+   ```bash
+   gh repo create myapp --template yourusername/foolstack --clone
+   cd myapp
+   ```
 
-### 🌐 Access Your Application
+3. **Start developing**:
+   ```bash
+   make setup  # Automated setup - creates .env, builds, migrates
+   make superuser  # Create admin user
+   ```
 
-| **Service**  | **URL**                         | **Purpose**      |
-|:-------------|:--------------------------------|:-----------------|
-| **Frontend** | http://localhost                | Main application |
-| **API**      | http://api.localhost:8000       | REST endpoints   |
-| **Admin**    | http://api.localhost:8000/admin | Django admin     |
-
-### 🛠️ Development Commands
-
-```bash
-make up           # Start services
-make down         # Stop services
-make logs         # View logs
-make migrate      # Run migrations
-make superuser    # Create admin user
-make shell-django # Access Django container
-```
+4. **Access your app**:
+   - Frontend: http://localhost
+   - API: http://api.localhost
+   - Admin: http://api.localhost/admin
 
 ## 📚 Documentation
 
-For comprehensive guides, API references, and advanced topics:
+- [**Template Usage Guide**](docs/TEMPLATE_USAGE.md) - How to customize this template for your project
+- [**Developer Guide**](docs/README.md) - Comprehensive development documentation
+- [**AI Assistant Guide**](CLAUDE.md) - Instructions for AI pair programming
 
-**➡️ [View Complete Documentation](./docs/README.md)**
+## 🛠️ Available Commands
 
-### Quick Links
+```bash
+# Development
+make setup           # One-command initial setup
+make up              # Start all services
+make down            # Stop all services
+make logs            # View logs from all services
+make status          # Show container status
 
-- **[🔐 Authentication Guide](./docs/authentication.md)** - JWT implementation details
-- **[🛠️ API Reference](./docs/api-reference.md)** - Complete endpoint documentation  
-- **[🏗️ Architecture Overview](./docs/README.md#architecture-overview)** - System design deep-dive
-- **[🚢 Production Deployment](./docs/deployment.md)** - Scaling and deployment strategies
+# Django
+make app <name>      # Create a new Django app
+make migrations      # Create database migrations
+make migrate         # Apply database migrations
+make superuser       # Create admin user
+make test            # Run tests
+make shell-django    # Django container shell
+make shell-vue       # Vue container shell
+
+# Building
+make build           # Smart rebuild with caching
+make build-clean     # Full rebuild (no cache)
+
+# IDE Setup
+make vscode-setup    # Configure VSCode Python environment
+make poetry-install  # Install Python deps locally
+make bun-install     # Generate Bun lockfile
+
+# Maintenance
+make restart         # Restart all services
+make clean           # Remove containers and volumes
+```
+
+## 🏗️ Project Structure
+
+```
+.
+├── server/                # Django backend
+│   ├── core/              # Project settings
+│   ├── authentication/    # JWT auth app (included)
+│   ├── pyproject.toml     # Python dependencies
+│   └── manage.py
+├── client/                # Vue 3 frontend
+│   ├── src/
+│   │   ├── components/    # Reusable components
+│   │   ├── pages/         # Page components
+│   │   ├── stores/        # Pinia stores
+│   │   └── apiClient/     # API client
+│   └── package.json       # JS dependencies
+├── caddy/                 # Web server config
+├── docker-compose.yml     # Container orchestration
+├── Makefile               # Developer commands
+└── .env.example           # Environment template
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+The entire stack is configured via `.env`:
+
+```env
+ENVIRONMENT=development|production
+BASE_DOMAIN=localhost
+DJANGO_SECRET_KEY=<auto-generated>
+DJANGO_PORT=8000
+VUE_PORT=5173
+DATABASE_NAME=db.sqlite3
+CADDY_EMAIL=admin@example.com
+LOG_LEVEL=INFO
+```
+
+### Domain Configuration
+
+- Frontend: `{BASE_DOMAIN}`
+- API: `api.{BASE_DOMAIN}`
+- Automatic SSL in production via Caddy
+
+## 🚢 Production Deployment
+
+1. Update `.env`:
+   ```env
+   ENVIRONMENT=production
+   BASE_DOMAIN=yourdomain.com
+   ```
+
+2. Build and deploy:
+   ```bash
+   make prod-build
+   make prod-up
+   ```
+
+3. Caddy automatically provisions SSL certificates
+
+## 🎨 Included Features
+
+### Backend
+- ✅ Custom User model with email authentication
+- ✅ JWT authentication system
+- ✅ CORS configuration (environment-aware)
+- ✅ Health check endpoint
+- ✅ Structured project layout
+- ✅ Poetry dependency management
+
+### Frontend
+- ✅ Vue 3 with Composition API
+- ✅ Vue Router configured
+- ✅ Pinia state management
+- ✅ Vite for fast development
+- ✅ API client setup (connects to backend)
+- ✅ Authentication store
+- ✅ Responsive starter layout
+
+### DevOps
+- ✅ Docker multi-stage builds
+- ✅ Development with hot reload
+- ✅ Production optimizations
+- ✅ Automatic HTTPS with Caddy
+- ✅ Environment-based configuration
+- ✅ VSCode integration
+
+## 🤝 Contributing
+
+This is a template repository designed to be forked and customized. If you have improvements to the template itself:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your improvements
+4. Submit a pull request
+
+---
+
+**Ready to build something awesome? [Get started now!](#-quick-start)**

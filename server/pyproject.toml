@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "gelt-server"
+name = "foolstack-server"
 version = "1.0.0"
-description = "Gelt Django Backend"
+description = "Foolstack Django Backend"
 authors = ["Yehuda Freedman <hudafreedman@gmail.com>"]
 package-mode = false
 

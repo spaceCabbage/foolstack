@@ -22,10 +22,11 @@ help:
 	@echo "  make clean           - Remove all containers and volumes"
 	@echo "  make restart         - Restart all services"
 	@echo "  make status          - Show container status"
+	@echo "  make rename <name>   - Rename project from foolstack to <name>"
 
 # Initial setup for new developers
 setup:
-	@echo "🚀 Setting up Gelt development environment..."
+	@echo "🚀 Setting up Foolstack development environment..."
 	@if [ -f .env ]; then \
 		echo "⚠️  .env file already exists. Skipping creation."; \
 	else \
@@ -108,7 +109,7 @@ test:
 
 # Clean everything
 clean:
-	docker-compose down -v
+	docker-compose down -v --remove-orphans
 	rm -rf data/*.sqlite3
 	@echo "Cleaned all containers and volumes"
 
@@ -153,3 +154,62 @@ vscode-setup:
 	@echo ""
 	@echo "🎉 VSCode setup complete! The Python interpreter is configured."
 	@echo "   Reload VSCode window to activate the Python environment."
+
+# Rename project from foolstack template
+rename:
+	@if [ -z "$(word 2,$(MAKECMDGOALS))" ]; then \
+		echo "Error: Please specify a project name using 'make rename myproject'"; \
+		exit 1; \
+	fi
+	@# Check if running on Windows
+	@if [ -n "$$WINDIR" ] || [ -n "$$SYSTEMROOT" ]; then \
+		echo "⚠️  Windows detected! This command requires Unix tools (find, sed)."; \
+		echo ""; \
+		echo "📝 To rename your project manually on Windows:"; \
+		echo ""; \
+		echo "1. Use your IDE's find and replace feature (e.g., VS Code: Ctrl+Shift+H)"; \
+		echo "2. Replace these terms across all files:"; \
+		echo "   - 'foolstack' → '$(word 2,$(MAKECMDGOALS))'"; \
+		echo "   - 'Foolstack' → '$(shell echo $(word 2,$(MAKECMDGOALS)) | sed 's/^./\u&/' 2>/dev/null || echo $(word 2,$(MAKECMDGOALS)))'"; \
+		echo "   - 'FOOLSTACK' → '$(shell echo $(word 2,$(MAKECMDGOALS)) | tr '[:lower:]' '[:upper:]' 2>/dev/null || echo $(word 2,$(MAKECMDGOALS)))'"; \
+		echo ""; \
+		echo "3. Include these file types: *.py, *.js, *.vue, *.html, *.md, *.yml, *.yaml, *.json, *.toml"; \
+		echo "4. Exclude these folders: .venv, node_modules, .git, data, logs"; \
+		echo ""; \
+		echo "💡 Alternatively, use WSL2 or Git Bash to run this command."; \
+		exit 1; \
+	fi
+	@echo "🔄 Renaming project from foolstack to $(word 2,$(MAKECMDGOALS))..."
+	@# Calculate the different case variations
+	@$(eval LOWERCASE := $(word 2,$(MAKECMDGOALS)))
+	@$(eval UPPERCASE := $(shell echo $(word 2,$(MAKECMDGOALS)) | tr '[:lower:]' '[:upper:]'))
+	@$(eval CAPITALIZED := $(shell echo $(word 2,$(MAKECMDGOALS)) | sed 's/^./\u&/'))
+	@# Find all text files and perform replacements
+	@find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.vue" -o -name "*.html" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.env*" -o -name "Makefile" -o -name "Dockerfile*" \) \
+		-not -path "./server/.venv/*" \
+		-not -path "./client/node_modules/*" \
+		-not -path "./.git/*" \
+		-not -path "./data/*" \
+		-not -path "./server/logs/*" \
+		-exec sed -i.bak \
+			-e 's/foolstack/$(LOWERCASE)/g' \
+			-e 's/Foolstack/$(CAPITALIZED)/g' \
+			-e 's/FOOLSTACK/$(UPPERCASE)/g' {} \; 2>/dev/null || \
+	find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.vue" -o -name "*.html" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.env*" -o -name "Makefile" -o -name "Dockerfile*" \) \
+		-not -path "./server/.venv/*" \
+		-not -path "./client/node_modules/*" \
+		-not -path "./.git/*" \
+		-not -path "./data/*" \
+		-not -path "./server/logs/*" \
+		-exec sed -i '' \
+			-e 's/foolstack/$(LOWERCASE)/g' \
+			-e 's/Foolstack/$(CAPITALIZED)/g' \
+			-e 's/FOOLSTACK/$(UPPERCASE)/g' {} \;
+	@# Clean up backup files
+	@find . -name "*.bak" -type f -delete 2>/dev/null || true
+	@echo "✅ Project renamed to $(word 2,$(MAKECMDGOALS))!"
+	@echo ""
+	@echo "📝 Note: Remember to:"
+	@echo "   - Rebuild containers: make build"
+	@echo "   - Update git remote if needed"
+	@echo "   - Search for any missed references"
