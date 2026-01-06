@@ -135,7 +135,7 @@ setup:
 	@echo "  2. Run 'make migrate' to apply database migrations"
 	@echo "  3. Run 'make superuser' to create an admin user"
 	@echo ""
-	@echo "Access point: https://localhost"
+	@$(MAKE) urls
 	@echo ""
 	@echo "Note: Development uses HTTPS with self-signed certificate."
 	@echo "      Accept the certificate warning in your browser."

@@ -1,3 +1,7 @@
+"""
+FoolStack Template - Created by Yehuda Freedman
+"""
+
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -6,28 +10,25 @@ from dotenv import load_dotenv
 
 from .logging import setup_logging
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-load_dotenv(BASE_DIR.parent / ".env")
-
 VERSION = "1.0.0"
 PROJECT_NAME = os.getenv("PROJECT_NAME", "foolstack")
 
-# Core settings
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR.parent / ".env")
+
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default-key-change-in-production")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 DEBUG = ENVIRONMENT != "production"
 DOMAIN = os.getenv("DOMAIN", "localhost")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
-# Allowed hosts - single domain setup (Caddy handles routing)
 if ENVIRONMENT == "development":
     ALLOWED_HOSTS = ["localhost", "127.0.0.1", "server", DOMAIN]
 else:
     ALLOWED_HOSTS = [DOMAIN, f"www.{DOMAIN}"]
 
 
-# CSRF settings
 if ENVIRONMENT == "development":
     CSRF_TRUSTED_ORIGINS = [
         f"https://{DOMAIN}",
@@ -39,19 +40,16 @@ else:
         f"https://www.{DOMAIN}",
     ]
 
-# Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
-
-# Static and media files
+ROOT_URLCONF = "core.urls"
 STATIC_URL = "/static/"
 STATIC_ROOT = "/data/staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = "/data/mediafiles"
 LOGS_DIR = "/data/logs"
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 INSTALLED_APPS = [
@@ -63,7 +61,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
-    # local apps
     "users",
 ]
 
@@ -78,7 +75,6 @@ MIDDLEWARE = [
     "core.middleware.RequestLoggingMiddleware",
 ]
 
-ROOT_URLCONF = "core.urls"
 
 # Logging
 setup_logging()
@@ -158,7 +154,9 @@ AUTH_USER_MODEL = "users.User"
 # ========================================
 # Redis Configuration
 # ========================================
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 
 CACHES = {
     "default": {
@@ -170,15 +168,14 @@ CACHES = {
     }
 }
 
-# Session backend - use Redis
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
 # ========================================
 # Celery Configuration
 # ========================================
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
@@ -223,23 +220,15 @@ SIMPLE_JWT = {
 # Security Settings (Production)
 # ========================================
 if ENVIRONMENT == "production":
-    # HTTPS settings
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
-
     SECURE_SSL_REDIRECT = True
     SECURE_REDIRECT_EXEMPT = [r"^api/ping/$", r"^api/health/$"]
-
-    # HSTS
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-
-    # Cookies
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-    # Content security
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"

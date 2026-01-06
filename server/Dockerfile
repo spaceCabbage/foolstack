@@ -5,7 +5,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    SERVER_PORT=8000
 
 WORKDIR /app
 
@@ -35,9 +36,9 @@ RUN mkdir -p /data/staticfiles /data/mediafiles /data/logs && \
     chown appuser:appuser /data /data/staticfiles /data/mediafiles /data/logs
 
 USER appuser
-EXPOSE 8000
+EXPOSE ${SERVER_PORT}
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD sh -c "python manage.py runserver 0.0.0.0:${SERVER_PORT}"
 
 FROM base AS production
 
@@ -54,9 +55,9 @@ RUN mkdir -p /data/staticfiles /data/mediafiles /data/logs && \
 RUN python manage.py collectstatic --noinput || true
 
 USER appuser
-EXPOSE 8000
+EXPOSE ${SERVER_PORT}
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/api/ping/ || exit 1
+    CMD curl -f http://localhost:${SERVER_PORT}/api/ping/ || exit 1
 
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--threads", "2", "--worker-class", "gthread", "--max-requests", "1000", "--max-requests-jitter", "50", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info"]
+CMD sh -c "gunicorn core.wsgi:application --bind 0.0.0.0:${SERVER_PORT} --workers 3 --threads 2 --worker-class gthread --max-requests 1000 --max-requests-jitter 50 --timeout 60 --access-logfile - --error-logfile - --log-level info"

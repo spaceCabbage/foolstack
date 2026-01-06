@@ -26,12 +26,12 @@
 
 	# API routes → Django (preserves /api prefix)
 	handle /api/* {
-		reverse_proxy server:8000
+		reverse_proxy server:{$SERVER_PORT:8000}
 	}
 
 	# Admin routes → Django
 	handle /admin/* {
-		reverse_proxy server:8000
+		reverse_proxy server:{$SERVER_PORT:8000}
 	}
 
 	# Static files from Django (collectstatic output)

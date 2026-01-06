@@ -30,6 +30,8 @@ services:
       - ./client:/app
       - /app/node_modules # Preserve node_modules from image
     environment:
+      # Override port for Vite dev server (default 80 in prod)
+      CLIENT_PORT: ${CLIENT_PORT:-5173}
       # Pass domain to Vite for API client baseURL
       VITE_DOMAIN: ${DOMAIN:-localhost}
       # Enable polling for file watching in Docker volumes
@@ -40,4 +42,5 @@ services:
   # Development Caddy config
   caddy:
     environment:
-      - CLIENT_PORT=5173 # Route to Vite dev server instead of production port
+      # Route to Vite dev server instead of production port
+      - CLIENT_PORT=${CLIENT_PORT:-5173}

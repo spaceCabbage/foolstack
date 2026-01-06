@@ -22,6 +22,8 @@ services:
     env_file: .env
     environment:
       REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      SERVER_PORT: ${SERVER_PORT:-8000}
     volumes:
       - ./data/logs:/data/logs
       - ./data/staticfiles:/data/staticfiles
@@ -30,7 +32,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/ping/']
+      test: ['CMD-SHELL', 'curl -f http://localhost:$${SERVER_PORT}/api/ping/']
       interval: 30s
       timeout: 5s
       retries: 5
@@ -48,6 +50,7 @@ services:
     env_file: .env
     environment:
       REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT:-6379}
     volumes:
       - ./data/logs:/data/logs
       - ./data/mediafiles:/data/mediafiles
@@ -68,6 +71,8 @@ services:
       target: ${ENVIRONMENT:-development}
     container_name: ${PROJECT_NAME:-foolstack}_client
     env_file: .env
+    environment:
+      CLIENT_PORT: ${CLIENT_PORT:-80}
     depends_on:
       server:
         condition: service_healthy
@@ -79,8 +84,8 @@ services:
     image: caddy:2-alpine
     container_name: ${PROJECT_NAME:-foolstack}_caddy
     ports:
-      - '${CADDY_PORT:-80}:80'
-      - '443:443'
+      - '${CADDY_HTTP_PORT:-80}:80'
+      - '${CADDY_HTTPS_PORT:-443}:443'
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./data/caddy_data:/data
@@ -89,6 +94,7 @@ services:
     environment:
       - DOMAIN=${DOMAIN:-localhost}
       - ENVIRONMENT=${ENVIRONMENT:-development}
+      - SERVER_PORT=${SERVER_PORT:-8000}
       - CLIENT_PORT=${CLIENT_PORT:-80}
     depends_on:
       - server

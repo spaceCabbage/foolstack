@@ -36,12 +36,23 @@ This is a full-stack web application with:
 Key variables in `.env`:
 
 ```env
+# Required
 PROJECT_NAME=foolstack          # Used for container/volume naming
 ENVIRONMENT=development         # development or production
 DOMAIN=localhost                # Your domain (serves SPA + API)
 SECRET_KEY=...                  # Django secret key (auto-generated)
-REDIS_URL=redis://redis:6379/0  # Redis connection
-CELERY_BROKER_URL=redis://...   # Celery broker
+
+# Optional (with sensible defaults)
+LOG_LEVEL=INFO                  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+DATABASE_NAME=db.sqlite3        # SQLite filename in ./data/
+CADDY_EMAIL=admin@example.com   # Let's Encrypt email (production)
+
+# Ports (all have defaults - configure if needed)
+CADDY_HTTP_PORT=80              # External HTTP port
+CADDY_HTTPS_PORT=443            # External HTTPS port
+SERVER_PORT=8000                # Django internal port
+CLIENT_PORT=5173                # Vite dev / 80 in prod
+REDIS_PORT=6379                 # Redis internal port
 ```
 
 ### Service Names
