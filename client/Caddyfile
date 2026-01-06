@@ -9,6 +9,5 @@
 
     file_server
 
-    # Enable compression
     encode gzip
 }

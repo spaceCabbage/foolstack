@@ -390,7 +390,6 @@ export function useAuth() {
 3. **Token Expiration**: Access tokens expire after 1 hour
 4. **Refresh Rotation**: Refresh tokens are rotated and old ones blacklisted
 5. **Password Validation**: Django's built-in password validators are enforced
-6. **CORS**: Properly configured for your domain
 
 ## Django Admin Integration
 

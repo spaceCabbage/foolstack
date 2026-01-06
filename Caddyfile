@@ -1,67 +1,62 @@
 # ========================================
 # Foolstack Caddyfile
 # ========================================
-# Single domain setup with path-based routing
-# - /api/* -> Django backend
-# - /admin/* -> Django admin
-# - /static/* -> Static files
-# - /* -> Vue frontend
+# Single domain setup with path-based routing:
+# - /api/*    → Django backend
+# - /admin/*  → Django admin
+# - /static/* → Static files (production)
+# - /*        → Vue frontend (Vite dev server or built SPA)
 #
-# SSL is enabled in both dev and prod:
-# - Development: Self-signed certificate (tls internal)
-# - Production: Let's Encrypt auto-provisioning
+# TLS: Caddy auto-provisions based on domain
+# - localhost → self-signed certificate
+# - real domain → Let's Encrypt
 
-# Security headers snippet
 (security_headers) {
-    header {
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        Referrer-Policy strict-origin-when-cross-origin
-        -Server
-    }
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
 }
 
 # Main site
-{$SERVER_DOMAIN:localhost} {
-    # Development: use self-signed certificate
-    @isDev expression {env.ENVIRONMENT} == "development"
-    tls @isDev internal
+{$DOMAIN:localhost} {
+	import security_headers
 
-    # Import security headers
-    import security_headers
+	# API routes → Django (preserves /api prefix)
+	handle /api/* {
+		reverse_proxy server:8000
+	}
 
-    # API routes -> Django
-    handle /api/* {
-        reverse_proxy server:8000
-    }
+	# Admin routes → Django
+	handle /admin/* {
+		reverse_proxy server:8000
+	}
 
-    # Admin routes -> Django
-    handle /admin/* {
-        reverse_proxy server:8000
-    }
+	# Static files from Django (collectstatic output)
+	handle /static/* {
+		root * /staticfiles
+		file_server
+	}
 
-    # Static files from Django (production)
-    handle /static/* {
-        root * /staticfiles
-        file_server
-    }
+	# Caddy health check
+	handle /caddy-health {
+		respond "OK" 200
+	}
 
-    # Health check endpoint for Caddy itself
-    handle /caddy-health {
-        respond "OK" 200
-    }
+	# Frontend - everything else goes to Vue
+	handle {
+		@development expression {env.ENVIRONMENT} == "development"
+		@production expression {env.ENVIRONMENT} != "development"
 
-    # Frontend -> Vue client
-    # Development: proxy to Vite dev server
-    # Production: serve static files from client container
-    @isDevelopment expression {env.ENVIRONMENT} == "development"
-    handle @isDevelopment {
-        reverse_proxy client:{$CLIENT_PORT:5173}
-    }
+		reverse_proxy @development client:{$CLIENT_PORT:5173} {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
 
-    # Production: proxy to client container (serving via internal Caddy)
-    @isProduction expression {env.ENVIRONMENT} != "development"
-    handle @isProduction {
-        reverse_proxy client:{$CLIENT_PORT:80}
-    }
+		reverse_proxy @production client:{$CLIENT_PORT:80}
+	}
 }

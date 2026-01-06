@@ -51,7 +51,7 @@ services:
     volumes:
       - ./data/logs:/data/logs
       - ./data/mediafiles:/data/mediafiles
-    command: celery -A core worker -l ${LOG_LEVEL:-info}
+    command: python -m celery -A core worker -l ${LOG_LEVEL:-info}
     depends_on:
       redis:
         condition: service_healthy
@@ -87,7 +87,7 @@ services:
       - ./data/caddy_config:/config
       - ./data/staticfiles:/staticfiles:ro
     environment:
-      - SERVER_DOMAIN=${SERVER_DOMAIN:-localhost}
+      - DOMAIN=${DOMAIN:-localhost}
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - CLIENT_PORT=${CLIENT_PORT:-80}
     depends_on:

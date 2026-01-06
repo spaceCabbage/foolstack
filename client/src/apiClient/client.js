@@ -1,7 +1,10 @@
 import axios from 'axios'
 
+const domain = import.meta.env.VITE_DOMAIN || 'localhost'
+const baseURL = `https://${domain}/api`
+
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },

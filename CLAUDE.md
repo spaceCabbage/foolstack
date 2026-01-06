@@ -38,7 +38,7 @@ Key variables in `.env`:
 ```env
 PROJECT_NAME=foolstack          # Used for container/volume naming
 ENVIRONMENT=development         # development or production
-SERVER_DOMAIN=localhost         # Your domain
+DOMAIN=localhost                # Your domain (serves SPA + API)
 SECRET_KEY=...                  # Django secret key (auto-generated)
 REDIS_URL=redis://redis:6379/0  # Redis connection
 CELERY_BROKER_URL=redis://...   # Celery broker
@@ -137,7 +137,7 @@ fetch('/api/auth/login/', {
 ## Production Deployment
 
 1. Set `ENVIRONMENT=production` in `.env`
-2. Update `SERVER_DOMAIN` to your actual domain
+2. Update `DOMAIN` to your actual domain
 3. Ensure `SECRET_KEY` is secure
 4. Run `make up` - Caddy auto-provisions SSL via Let's Encrypt
 

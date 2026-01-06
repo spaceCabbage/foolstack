@@ -250,7 +250,6 @@ To add Redis, PostgreSQL, or other services:
 
 1. **Port conflicts**: Change `VUE_PORT` or `DJANGO_PORT` in `.env`
 2. **Permission errors**: Check Docker volume permissions
-3. **CORS issues**: Verify `BASE_DOMAIN` matches your browser URL
 4. **Module not found**: Rebuild containers after adding dependencies
 
 ### Useful Commands
@@ -283,7 +282,6 @@ docker-compose exec server poetry run python manage.py test todos
 ## 🚨 What to Change Immediately
 
 1. **Django SECRET_KEY**: Generate a new one for production
-2. **CORS settings**: Update for your domains
 3. **API permissions**: Default is AllowAny for some endpoints
 4. **Container names**: Optional but recommended for clarity
 5. **Git remote**: Point to your repository

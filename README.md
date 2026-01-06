@@ -7,7 +7,7 @@ A production-ready, batteries-included full stack web application template featu
 Foolstack eliminates the tedious setup of a modern full-stack application by providing:
 
 - **Zero-config development environment** - One command to start developing
-- **Production-ready from day one** - SSL, CORS, security headers all configured
+- **Production-ready from day one** - SSL, security headers all configured
 - **Modern tech stack** - Django 5.1, Vue 3, Vite, Docker, Caddy
 - **Developer experience focused** - Hot reload, VSCode integration, comprehensive Makefile
 - **Best practices built-in** - JWT auth, environment-based config, proper project structure
@@ -154,7 +154,6 @@ LOG_LEVEL=INFO
 ### Backend
 - ✅ Custom User model with email authentication
 - ✅ JWT authentication system
-- ✅ CORS configuration (environment-aware)
 - ✅ Health check endpoint
 - ✅ Structured project layout
 - ✅ Poetry dependency management

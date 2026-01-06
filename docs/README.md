@@ -237,7 +237,7 @@ graph TB
 <summary><strong>📊 Detailed Request Processing Flow</strong></summary>
 
 1. **🌍 User Request** → Caddy Proxy (SSL termination, routing)
-2. **🔒 Security Layer** → CORS validation, rate limiting
+2. **🔒 Security Layer** → validation, rate limiting
 3. **🎨 Frontend Route** → Vue Router, component loading
 4. **🔌 API Request** → Authentication header injection
 5. **🔐 JWT Validation** → Token verification, user context

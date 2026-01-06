@@ -64,12 +64,12 @@ deps:
 # Show access URLs
 urls:
 	@ENVIRONMENT=$$(grep -E '^ENVIRONMENT=' .env 2>/dev/null | cut -d '=' -f2 || echo "development"); \
-	SERVER_DOMAIN=$$(grep -E '^SERVER_DOMAIN=' .env 2>/dev/null | cut -d '=' -f2 || echo "localhost"); \
+	DOMAIN=$$(grep -E '^DOMAIN=' .env 2>/dev/null | cut -d '=' -f2 || echo "localhost"); \
 	echo "Access URLs:"; \
-	echo "  Frontend:  https://$$SERVER_DOMAIN"; \
-	echo "  API:       https://$$SERVER_DOMAIN/api"; \
-	echo "  Admin:     https://$$SERVER_DOMAIN/admin"; \
-	echo "  Health:    https://$$SERVER_DOMAIN/api/health"
+	echo "  Frontend:  https://$$DOMAIN"; \
+	echo "  API:       https://$$DOMAIN/api"; \
+	echo "  Admin:     https://$$DOMAIN/admin"; \
+	echo "  Health:    https://$$DOMAIN/api/health"
 
 # Show comprehensive system status
 status:

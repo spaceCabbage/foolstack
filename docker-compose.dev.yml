@@ -30,6 +30,8 @@ services:
       - ./client:/app
       - /app/node_modules # Preserve node_modules from image
     environment:
+      # Pass domain to Vite for API client baseURL
+      VITE_DOMAIN: ${DOMAIN:-localhost}
       # Enable polling for file watching in Docker volumes
       # Required for Vite HMR to detect file changes across Docker volumes
       CHOKIDAR_USEPOLLING: 'true'

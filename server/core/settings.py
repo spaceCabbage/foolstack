@@ -10,7 +10,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR.parent / ".env")
 
-# Project info
 VERSION = "1.0.0"
 PROJECT_NAME = os.getenv("PROJECT_NAME", "foolstack")
 
@@ -18,29 +17,26 @@ PROJECT_NAME = os.getenv("PROJECT_NAME", "foolstack")
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default-key-change-in-production")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 DEBUG = ENVIRONMENT != "production"
-SERVER_DOMAIN = os.getenv("SERVER_DOMAIN", "localhost")
+DOMAIN = os.getenv("DOMAIN", "localhost")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
 # Allowed hosts - single domain setup (Caddy handles routing)
 if ENVIRONMENT == "development":
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "server", SERVER_DOMAIN]
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "server", DOMAIN]
 else:
-    ALLOWED_HOSTS = [SERVER_DOMAIN, f"www.{SERVER_DOMAIN}"]
+    ALLOWED_HOSTS = [DOMAIN, f"www.{DOMAIN}"]
 
-# CORS settings - single domain, path-based routing
-CORS_ALLOWED_ORIGINS = []  # Not needed with single domain + Caddy proxy
-CORS_ALLOW_CREDENTIALS = True
 
 # CSRF settings
 if ENVIRONMENT == "development":
     CSRF_TRUSTED_ORIGINS = [
-        f"https://{SERVER_DOMAIN}",
+        f"https://{DOMAIN}",
         f"https://localhost",
     ]
 else:
     CSRF_TRUSTED_ORIGINS = [
-        f"https://{SERVER_DOMAIN}",
-        f"https://www.{SERVER_DOMAIN}",
+        f"https://{DOMAIN}",
+        f"https://www.{DOMAIN}",
     ]
 
 # Internationalization
@@ -67,14 +63,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
-    "corsheaders",
     # local apps
     "users",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -191,6 +185,7 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # ========================================
 # REST Framework Configuration
