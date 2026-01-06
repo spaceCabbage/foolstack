@@ -5,20 +5,30 @@ Simple, clean setup with colors and daily rotation.
 
 import os
 import sys
+
 from loguru import logger
 
+_logging_configured = False
+
+
 def setup_logging():
-    from core.settings import BASE_DIR
     """Configure loguru for Django with colors and rotation."""
-    
+    global _logging_configured
+
+    # Prevent duplicate configuration
+    if _logging_configured:
+        return
+    _logging_configured = True
+
+    from core.settings import BASE_DIR
+
     logger.remove()
     environment = os.getenv("ENVIRONMENT", "development")
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-    
-    
+
     log_dir = BASE_DIR / "logs"
     log_dir.mkdir(exist_ok=True)
-    
+
     if environment == "development":
         # Development: colorful console + debug file
         logger.add(
@@ -27,7 +37,7 @@ def setup_logging():
             level=log_level,
             colorize=True,
         )
-        
+
         logger.add(
             log_dir / "debug.log",
             format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{line} | {message}",
@@ -44,7 +54,7 @@ def setup_logging():
             level=log_level,
             colorize=False,
         )
-        
+
         logger.add(
             log_dir / "application.log",
             format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{line} | {message}",
@@ -54,8 +64,20 @@ def setup_logging():
             compression="gz",
         )
 
+    # Log startup info
+    project_name = os.getenv("PROJECT_NAME", "foolstack")
+    version = os.getenv("VERSION", "unknown")
+    logger.info(
+        "Starting {project} ({env}) | log_level={level}",
+        project=project_name,
+        env=environment,
+        level=log_level,
+    )
+
+
 # Intercept Django's logging and redirect to Loguru
 import logging
+
 
 class InterceptHandler(logging.Handler):
     def emit(self, record):
@@ -71,4 +93,6 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
