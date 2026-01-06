@@ -85,15 +85,24 @@ pnpm-debug.log*
 # IDE / Editor
 # ========================================
 .idea/
-.vscode/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 .DS_Store
-
-# ========================================
-# Claude Code
-# ========================================
 .claude/
+.cursor/
+.copilot/
+.github/copilot/
+.aider*
+.codeium/
+.continue/
+.tabnine/
+.sourcegraph/
+.cody/
+.windsurf/
+.codex/
+.openai/
+.gemini/
+.augment/
