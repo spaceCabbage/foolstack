@@ -40,6 +40,7 @@ else:
         f"https://www.{DOMAIN}",
     ]
 
+AUTH_USER_MODEL = "users.User"
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
+    "django_celery_results",
     "users",
 ]
 
@@ -148,8 +150,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Custom user model
-AUTH_USER_MODEL = "users.User"
 
 # ========================================
 # Redis Configuration
@@ -175,7 +175,7 @@ SESSION_CACHE_ALIAS = "default"
 # Celery Configuration
 # ========================================
 CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_RESULT_BACKEND = "django-db"  # Store results in DB for admin visibility
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
@@ -196,6 +196,13 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
     "EXCEPTION_HANDLER": "core.exceptions.custom_exception_handler",
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/hour",
+        "user": "1000/hour",
+        "login": "5/minute",
+        "register": "3/minute",
+        "password_reset": "3/minute",
+    },
 }
 
 # JWT settings
@@ -232,3 +239,30 @@ if ENVIRONMENT == "production":
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"
+
+# ========================================
+# Email Configuration (Resend)
+# ========================================
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", f"noreply@{DOMAIN}")
+PASSWORD_RESET_TIMEOUT = int(os.getenv("PASSWORD_RESET_TIMEOUT", "3600"))  # 1 hour
+
+# Smart backend selection:
+# - No RESEND_API_KEY -> console + warning
+# - Otherwise -> Resend
+_use_console_email = DEBUG or LOG_LEVEL == "DEBUG" or not RESEND_API_KEY
+
+if not RESEND_API_KEY and not DEBUG:
+    import warnings
+
+    warnings.warn(
+        "RESEND_API_KEY not set! Emails will be logged to console. "
+        "Set RESEND_API_KEY in .env for production email delivery.",
+        stacklevel=1,
+    )
+
+EMAIL_BACKEND = (
+    "django.core.mail.backends.console.EmailBackend"
+    if _use_console_email
+    else "core.email.ResendEmailBackend"
+)

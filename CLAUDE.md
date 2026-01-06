@@ -140,6 +140,32 @@ fetch('/api/auth/login/', {
 })
 ```
 
+## Auth Endpoints
+
+The template ships with **registration and password reset disabled by default** for security.
+Enable them by uncommenting in `server/users/urls.py`:
+
+```python
+# Uncomment to enable:
+# path("register/", views.RegisterView.as_view(), name="register"),
+# path("password-reset/", views.PasswordResetRequestView.as_view(), name="password_reset_request"),
+# path("password-reset/confirm/", views.PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
+```
+
+**Enabled by default:**
+- `POST /api/auth/login/` - JWT login (rate limited: 5/min)
+- `POST /api/auth/token/refresh/` - Refresh JWT token
+- `GET/PUT /api/auth/profile/` - View/update user profile (authenticated)
+
+**Disabled by default (uncomment to enable):**
+- `POST /api/auth/register/` - User registration (rate limited: 3/min)
+- `POST /api/auth/password-reset/` - Request password reset email (rate limited: 3/min)
+- `POST /api/auth/password-reset/confirm/` - Confirm password reset with token
+
+**Email Configuration (for password reset):**
+- Development: Emails logged to console (no config needed)
+- Production: Set `RESEND_API_KEY` in `.env` (get key at https://resend.com/api-keys)
+
 ## Health Endpoints
 
 - `/api/ping/` - Fast healthcheck (database only) - used by Docker

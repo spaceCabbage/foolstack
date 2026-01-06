@@ -10,10 +10,10 @@ export default defineConfig(({ mode }) => {
   const baseDomain = env.BASE_DOMAIN || 'localhost'
   const isDevelopment = env.ENVIRONMENT === 'development'
   const vuePort = parseInt(env.VUE_PORT) || 5173
-  const serverPort = parseInt(env.DJANGO_PORT) || 8000
+  const djangoPort = parseInt(env.DJANGO_PORT) || 8000
   const logLevel = env.LOG_LEVEL || 'INFO'
   const serverBaseUrl = isDevelopment
-    ? `http://api.${baseDomain}:${serverPort}`
+    ? `http://api.${baseDomain}:${djangoPort}`
     : `https://api.${baseDomain}`
 
   return {
@@ -26,13 +26,6 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '0.0.0.0',
       port: vuePort,
-      proxy: {
-        '/api': {
-          target: isDevelopment ? `http://server:${serverPort}` : serverBaseUrl,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-      },
     },
     define: {
       'import.meta.env.VITE_API_URL': JSON.stringify(serverBaseUrl),

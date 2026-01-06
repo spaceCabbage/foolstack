@@ -1,5 +1,5 @@
 <template>
-  <main class="h-screen w-screen flex items-center justify-center">
+  <MainLayout class="h-screen w-screen flex items-center justify-center">
     <div>
       <h1
         class="text-9xl font-bold text-shadow"
@@ -12,12 +12,13 @@
         FOOLSTACK
       </h1>
     </div>
-  </main>
+  </MainLayout>
 </template>
 
 <script setup>
 import { useQuery } from '@tanstack/vue-query'
 import { getHealth } from '@/apiClient/queries'
+import MainLayout from '@/components/layouts/MainLayout.vue'
 
 const { data, isLoading, isError } = useQuery({
   queryFn: getHealth,

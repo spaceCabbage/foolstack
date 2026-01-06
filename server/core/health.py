@@ -63,9 +63,8 @@ def health_check(request):
 
     # Check Redis
     try:
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
         redis_start = time.time()
-        r = redis.from_url(redis_url)
+        r = redis.from_url(settings.REDIS_URL)
         r.ping()
         health["checks"]["redis"] = {
             "status": "healthy",
