@@ -10,29 +10,36 @@ RUN bun install --frozen-lockfile
 # Development stage
 FROM base AS development
 
-# Set environment variables
 ENV NODE_ENV=development
 
 # Copy source code (changes frequently)
 COPY . .
 
-# Expose the configurable Vite port
-EXPOSE ${VUE_PORT:-5173}
+# Expose the Vite dev server port
+EXPOSE 5173
 
 # Start development server with host binding for Docker
-CMD ["sh", "-c", "bun run dev -- --host 0.0.0.0 --port ${VUE_PORT:-5173}"]
+CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 
-# Production stage - Build static files
-FROM base AS production
+# Build stage - builds the Vue app
+FROM base AS build
 
-# Set environment variables
 ENV NODE_ENV=production
 
-# Copy source code
 COPY . .
 
 # Build the application
 RUN bun run build
 
-# Simple completion indicator for production
-CMD ["sh", "-c", "echo 'Built successfully. Files ready in /app/dist' && sleep infinity"]
+# Production stage - serves with Caddy
+FROM caddy:2-alpine AS production
+
+# Copy built assets from build stage
+COPY --from=build /app/dist /app/dist
+
+# Copy Caddyfile for SPA routing
+COPY Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 80
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]

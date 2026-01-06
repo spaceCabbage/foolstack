@@ -1,215 +1,328 @@
-.PHONY: help setup up down build build-clean logs shell-django shell-vue migrate app test clean restart status poetry-install bun-install vscode-setup
+# ========================================
+# Foolstack Makefile
+# ========================================
+# Project management commands for Foolstack (Django + Vue3 + Redis + Celery)
 
-# Default target
+.PHONY: help setup build build-clean up down restart logs status urls shell migrations migrate superuser collectstatic deps manage test test-coverage purge init
+
+# Variables
+PROJECT_NAME := $(shell grep -E '^PROJECT_NAME=' .env 2>/dev/null | cut -d '=' -f2 || echo "foolstack")
+
+# Default target - show help
 help:
+	@echo "Foolstack - Django + Vue3 + Redis + Celery"
+	@echo ""
+	@echo "-> New here? Just run 'make setup'"
+	@echo ""
 	@echo "Available commands:"
-	@echo "  make setup           - Initial setup for new developers"
-	@echo "  make vscode-setup    - Set up local development environment for VSCode"
-	@echo "  make up              - Start all services"
-	@echo "  make down            - Stop all services"
-	@echo "  make build           - Smart rebuild with caching (recommended)"
-	@echo "  make build-clean     - Full rebuild without cache (slow, for debugging)"
-	@echo "  make poetry-install  - Set up Poetry environment for VSCode"
-	@echo "  make bun-install     - Generate Bun lock file"
-	@echo "  make logs            - View logs from all services"
-	@echo "  make shell-django    - Open shell in Django container"
-	@echo "  make shell-vue       - Open shell in Vue container"
-	@echo "  make migrate         - Run Django migrations"
-	@echo "  make migrations       - Create Django migrations"
-	@echo "  make app <name>      - Create a new Django app"
-	@echo "  make superuser       - Create Django superuser"
-	@echo "  make test            - Run Django tests"
-	@echo "  make clean           - Remove all containers and volumes"
-	@echo "  make restart         - Restart all services"
-	@echo "  make status          - Show container status"
-	@echo "  make rename <name>   - Rename project from foolstack to <name>"
+	@echo "  make setup          - First-time setup (creates .env, builds, installs deps)"
+	@echo "  make up             - Start services (detached)"
+	@echo "  make down           - Stop all services"
+	@echo "  make restart        - Restart all services"
+	@echo "  make logs [FLAGS]   - Follow logs (run 'make logs h' for service flags)"
+	@echo "  make status         - Show system status and health"
+	@echo "  make urls           - Show access URLs"
+	@echo "  make shell          - Open Django shell (interactive Python)"
+	@echo ""
+	@echo "  make build          - Build Docker images"
+	@echo "  make build-clean    - Build Docker images without cache"
+	@echo "  make migrations     - Create Django migrations"
+	@echo "  make migrate        - Run database migrations"
+	@echo "  make superuser      - Create Django superuser"
+	@echo "  make collectstatic  - Collect static files (for production)"
+	@echo "  make purge          - DANGER: Wipes database, volumes and images"
+	@echo ""
+	@echo "  make deps           - Sync local venv with requirements.txt"
+	@echo "  make manage <cmd>   - Run any Django management command"
+	@echo ""
+	@echo "  make test           - Run all tests"
+	@echo "  make test-coverage  - Run tests with coverage report"
+	@echo ""
+	@echo "  make init <name>    - Initialize new project from template (rename)"
 
-# Initial setup for new developers
+# Sync local Python and Bun dependencies (for VSCode/IDE)
+deps:
+	@echo "=========================================="
+	@echo "Syncing Dependencies"
+	@echo "=========================================="
+	@echo ""
+	@echo "📦 Syncing Python dependencies..."
+	@if [ ! -d server/.venv ]; then \
+		echo "⚠️  Local venv doesn't exist. Creating it..."; \
+		cd server && python3 -m venv --copies .venv; \
+	fi
+	@cd server && .venv/bin/pip install --upgrade pip -q
+	@cd server && .venv/bin/pip install -r requirements.txt
+	@echo "✅ Python venv updated"
+	@echo ""
+	@echo "📦 Syncing Bun dependencies..."
+	@cd client && bun install --frozen-lockfile 2>/dev/null || cd client && bun install
+	@echo "✅ Bun dependencies synced"
+	@echo ""
+	@echo "💡 Run 'make build' to update Docker images"
+
+# Show access URLs
+urls:
+	@ENVIRONMENT=$$(grep -E '^ENVIRONMENT=' .env 2>/dev/null | cut -d '=' -f2 || echo "development"); \
+	SERVER_DOMAIN=$$(grep -E '^SERVER_DOMAIN=' .env 2>/dev/null | cut -d '=' -f2 || echo "localhost"); \
+	echo "Access URLs:"; \
+	echo "  Frontend:  https://$$SERVER_DOMAIN"; \
+	echo "  API:       https://$$SERVER_DOMAIN/api"; \
+	echo "  Admin:     https://$$SERVER_DOMAIN/admin"; \
+	echo "  Health:    https://$$SERVER_DOMAIN/api/health"
+
+# Show comprehensive system status
+status:
+	@echo "=========================================="
+	@echo "$(PROJECT_NAME) System Status"
+	@echo "=========================================="
+	@ENVIRONMENT=$$(grep -E '^ENVIRONMENT=' .env 2>/dev/null | cut -d '=' -f2 || echo "development"); \
+	echo "Environment: $$ENVIRONMENT"
+	@echo ""
+	@echo "--- Containers ---"
+	@docker-compose ps --format "table {{.Name}}\t{{.Status}}\t{{.RunningFor}}" 2>/dev/null || echo "No containers running (run 'make up' to start)"
+	@echo ""
+	@if docker-compose ps 2>/dev/null | grep -q "Up"; then \
+		echo "--- Health Check ---"; \
+		curl -sk https://localhost/api/health/ 2>/dev/null | python3 -c "import sys, json; data = json.load(sys.stdin); print(f\"Status: {'✅' if data.get('status') == 'healthy' else '❌'} {data.get('status', 'unknown').upper()}\"); checks = data.get('checks', {}); print(f\"Database: {'✅' if checks.get('database', {}).get('status') == 'healthy' else '❌'}\"); print(f\"Redis: {'✅' if checks.get('redis', {}).get('status') == 'healthy' else '❌'}\")" 2>/dev/null || echo "Status: ❌ Unable to fetch health status"; \
+	fi
+
+# First-time setup with proper SECRET_KEY generation
 setup:
-	@echo "🚀 Setting up Foolstack development environment..."
-	@if [ -f .env ]; then \
-		echo "⚠️  .env file already exists. Skipping creation."; \
+	@echo "=========================================="
+	@echo "Foolstack First-Time Setup"
+	@echo "=========================================="
+	@echo ""
+	@if [ ! -f .env ]; then \
+		echo "📄 Copying .env.example to .env..."; \
+		cp .env.example .env; \
+		echo "🔐 Generating SECRET_KEY..."; \
+		if command -v python3 >/dev/null 2>&1; then \
+			SECRET_KEY=$$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))'); \
+		else \
+			SECRET_KEY=$$(openssl rand -base64 50 | tr -d '\n'); \
+		fi; \
+		if [ -n "$$SECRET_KEY" ]; then \
+			sed -i.bak "s|^SECRET_KEY=.*|SECRET_KEY=$$SECRET_KEY|" .env && rm -f .env.bak; \
+			echo "✅ Generated secure SECRET_KEY"; \
+		else \
+			echo "❌ Failed to generate SECRET_KEY. Please set it manually in .env"; \
+			exit 1; \
+		fi; \
+		echo "✅ .env file created successfully"; \
 	else \
-		echo "# Generated by 'make setup' on $$(date)" > .env; \
-		echo "ENVIRONMENT=development" >> .env; \
-		echo "BASE_DOMAIN=localhost" >> .env; \
-		echo "DJANGO_SECRET_KEY=$$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')" >> .env; \
-		echo "DATABASE_NAME=db.sqlite3" >> .env; \
-		echo "CADDY_EMAIL=admin@example.com" >> .env; \
-		echo "DJANGO_PORT=8000" >> .env; \
-		echo "VUE_PORT=5173" >> .env; \
-		echo "LOG_LEVEL=INFO" >> .env; \
+		echo "✅ .env file already exists, skipping..."; \
+		echo "   To regenerate, delete .env and run 'make setup' again"; \
 	fi
-	@docker-compose build --quiet
-	@docker-compose up -d
-	@sleep 10
-	@docker-compose exec server python manage.py migrate
 	@echo ""
-	@echo "✅ Setup complete! Your application is running at:"
-	@echo "   Frontend: http://localhost"
-	@echo "   API: http://api.localhost"
+	@echo "📦 Installing local dependencies (Python + Bun)..."
+	@$(MAKE) deps
 	@echo ""
-	@echo "👤 Next step: Create a superuser with 'make superuser'"
+	@echo "📁 Creating data directories with proper permissions..."
+	@mkdir -p data/logs data/mediafiles data/staticfiles data/caddy_data data/caddy_config
+	@chmod 777 data/logs data/mediafiles data/staticfiles data/caddy_data data/caddy_config
+	@echo "✅ Data directories created"
+	@echo ""
+	@echo "🐳 Building Docker images..."
+	@$(MAKE) build
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ Setup Complete!"
+	@echo "=========================================="
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Run 'make up' to start all services"
+	@echo "  2. Run 'make migrate' to apply database migrations"
+	@echo "  3. Run 'make superuser' to create an admin user"
+	@echo ""
+	@echo "Access point: https://localhost"
+	@echo ""
+	@echo "Note: Development uses HTTPS with self-signed certificate."
+	@echo "      Accept the certificate warning in your browser."
 
-# Start services 
-up:
-	docker-compose up -d
-	@echo "Services started. Access the app at:"
-	@echo "  CLIENT: http://$(shell grep BASE_DOMAIN .env | cut -d '=' -f2):$(shell grep VUE_PORT .env | cut -d '=' -f2)"
-	@echo "  SERVER: http://api.$(shell grep BASE_DOMAIN .env | cut -d '=' -f2):$(shell grep DJANGO_PORT .env | cut -d '=' -f2)"
-
-# Stop services
-down:
-	docker-compose down
-
-# Smart build with caching (recommended for daily use)
+# Build Docker images
 build:
-	@echo "🚀 Building with optimizations and caching..."
-	docker-compose build
+	@echo "Building Docker images..."
+	@docker-compose build
 
-# Full rebuild without cache (for debugging or fresh start)
+# Build Docker images without cache
 build-clean:
-	@echo "🧹 Full rebuild without cache (this will be slow)..."
-	docker-compose build --no-cache
+	@echo "Building Docker images (no cache)..."
+	@docker-compose build --no-cache
 
-# View logs
-logs:
-	docker-compose logs -f
-
-# Shell access
-shell-django:
-	docker-compose exec server /bin/sh
-
-shell-vue:
-	docker-compose exec client /bin/sh
-
-# Django commands
-migrate:
-	docker-compose exec server poetry run python manage.py migrate
-
-migrations:
-	docker-compose exec server poetry run python manage.py makemigrations
-
-app:
-	@if [ -z "$(word 2,$(MAKECMDGOALS))" ]; then \
-		echo "Error: Please specify an app name using 'make app myapp'"; \
-		exit 1; \
+# Start services (automatically adapts to ENVIRONMENT from .env)
+up:
+	@mkdir -p data/logs data/mediafiles data/staticfiles data/caddy_data data/caddy_config
+	@chmod 777 data/logs data/mediafiles data/staticfiles data/caddy_data data/caddy_config 2>/dev/null || true
+	@ENVIRONMENT=$$(grep -E '^ENVIRONMENT=' .env | cut -d '=' -f2 || echo "development"); \
+	echo "Starting services in $$ENVIRONMENT mode..."; \
+	if [ "$$ENVIRONMENT" = "production" ]; then \
+		docker-compose up -d; \
+	else \
+		docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d; \
 	fi
-	docker-compose exec server poetry run python manage.py startapp $(word 2,$(MAKECMDGOALS))
+	@echo ""
+	@$(MAKE) urls
+	@echo ""
+	@echo "Run 'make logs' to view logs"
 
+# Stop services (handles both dev and prod)
+down:
+	@echo "Stopping services..."
+	@docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
+	@echo "✅ Services stopped"
+
+# Restart all services (down + up)
+restart:
+	@echo "Restarting all services..."
+	@$(MAKE) down
+	@$(MAKE) up
+
+# View logs with optional service flags
+# Usage:
+#   make logs        → all services
+#   make logs s      → server only
+#   make logs scw    → server, client, worker
+#   make logs h      → show help
+# Flags: s (server), c (client), w (worker), r (redis), d (caddy)
+logs:
+	@ARGS="$(filter-out $@,$(MAKECMDGOALS))"; \
+	SERVICES=""; \
+	if [ -z "$$ARGS" ]; then \
+		echo "Following all logs (Ctrl+C to exit)..."; \
+		docker-compose logs -f; \
+	elif [ "$$ARGS" = "h" ] || [ "$$ARGS" = "help" ] || [ "$$ARGS" = "-h" ] || [ "$$ARGS" = "--help" ]; then \
+		echo "Usage: make logs [FLAGS]"; \
+		echo "make logs         All services (default)"; \
+		echo ""; \
+		echo "View logs from specific services by combining flag characters:"; \
+		echo "  s  Server (Django backend)"; \
+		echo "  c  Client (Vue frontend)"; \
+		echo "  w  Worker (Celery worker)"; \
+		echo "  r  Redis"; \
+		echo "  d  Caddy (reverse proxy)"; \
+		echo ""; \
+		echo "Examples:"; \
+		echo "  make logs sw       Watch server and worker"; \
+		echo "  make logs scw      Watch frontend, backend, and worker"; \
+	else \
+		case "$$ARGS" in \
+			*s*) SERVICES="$$SERVICES server";; \
+		esac; \
+		case "$$ARGS" in \
+			*c*) SERVICES="$$SERVICES client";; \
+		esac; \
+		case "$$ARGS" in \
+			*w*) SERVICES="$$SERVICES worker";; \
+		esac; \
+		case "$$ARGS" in \
+			*r*) SERVICES="$$SERVICES redis";; \
+		esac; \
+		case "$$ARGS" in \
+			*d*) SERVICES="$$SERVICES caddy";; \
+		esac; \
+		if [ -z "$$SERVICES" ]; then \
+			echo "❌ Unknown flags: $$ARGS"; \
+			echo ""; \
+			echo "Run 'make logs h' for usage help"; \
+		else \
+			echo "Following logs for:$$SERVICES (Ctrl+C to exit)..."; \
+			docker-compose logs -f $$SERVICES; \
+		fi; \
+	fi
+
+# Open Django shell
+shell:
+	@echo "Opening Django shell..."
+	@docker-compose exec server python manage.py shell
+
+# Create Django migrations
+migrations:
+	@echo "Creating Django migrations..."
+	@docker-compose exec server python manage.py makemigrations
+
+# Run Django migrations
+migrate:
+	@echo "Running Django migrations..."
+	@docker-compose exec server python manage.py migrate
+
+# Create Django superuser
+superuser:
+	@echo "Creating superuser (interactive mode)..."
+	@docker-compose exec -it server python manage.py createsuperuser
+
+# Collect static files (for production)
+collectstatic:
+	@echo "Collecting static files..."
+	@docker-compose exec server python manage.py collectstatic --noinput
+	@echo "✅ Static files collected to data/staticfiles/"
+
+# Generic Django management command pass-through
+manage:
+	@docker-compose exec server python manage.py $(filter-out $@,$(MAKECMDGOALS))
+
+# Catch-all target to prevent make errors when passing arguments
 %:
 	@:
 
-
-superuser:
-	docker-compose exec -it server poetry run python manage.py createsuperuser
-
+# Run all tests
 test:
-	docker-compose exec server poetry run python manage.py test
+	@echo "Running all tests..."
+	@docker-compose exec server python -m pytest $(filter-out $@,$(MAKECMDGOALS))
 
-# Clean everything
-clean:
-	docker-compose down -v --remove-orphans
-	rm -rf data/*.sqlite3
-	@echo "Cleaned all containers and volumes"
-
-# Restart services
-restart:
-	docker-compose restart
-
-# Show status
-status:
-	docker-compose ps
-
-# Package manager commands
-poetry-install:
-	@echo "🔧 Setting up Poetry environment and VSCode integration..."
-	cd server && poetry install
-	@echo "✅ Local .venv created for VSCode at server/.venv"
-
-bun-install:
-	@echo "🔧 Generating Bun lock file..."
-	cd client && bun install
-
-# Development specific commands  
-dev-install:
-	docker-compose exec client bun install
-
-dev-django-shell:
-	docker-compose exec server poetry run python manage.py shell
-
-# Production build
-prod-build:
-	ENVIRONMENT=production docker-compose build
-
-prod-up:
-	ENVIRONMENT=production docker-compose up -d
-
-# VSCode development setup
-vscode-setup:
-	@echo "🔧 Setting up local development environment for VSCode..."
-	@echo "📦 Installing Poetry dependencies locally..."
-	cd server && poetry install
-	@echo "✅ Python environment ready at: server/.venv/bin/python"
+# Run tests with coverage report
+test-coverage:
+	@echo "Running tests with coverage..."
+	@docker-compose exec server python -m pytest --cov=. --cov-report=html --cov-report=term
 	@echo ""
-	@echo "🎉 VSCode setup complete! The Python interpreter is configured."
-	@echo "   Reload VSCode window to activate the Python environment."
+	@echo "✅ Coverage report generated at server/htmlcov/index.html"
 
-# Rename project from foolstack template
-rename:
+# Nuclear option - fresh slate
+purge:
+	@echo "WARNING: This will delete ALL data, volumes, and images!"
+	@echo "Press Ctrl+C within 5 seconds to cancel..."
+	@sleep 5
+	@echo ""
+	@echo "Stopping services..."
+	@docker-compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+	@echo "Removing volumes..."
+	@docker volume rm $(PROJECT_NAME)_redis_data 2>/dev/null || true
+	@echo "Removing generated files (keeping .gitkeep)..."
+	@find data -type f ! -name '.gitkeep' -delete 2>/dev/null || true
+	@echo ""
+	@echo "Purge complete! Run 'make setup' to start fresh."
+
+# Initialize new project from template (rename)
+init:
 	@if [ -z "$(word 2,$(MAKECMDGOALS))" ]; then \
-		echo "Error: Please specify a project name using 'make rename myproject'"; \
+		echo "Error: Please specify a project name using 'make init myproject'"; \
 		exit 1; \
 	fi
-	@# Check if running on Windows
-	@if [ -n "$$WINDIR" ] || [ -n "$$SYSTEMROOT" ]; then \
-		echo "⚠️  Windows detected! This command requires Unix tools (find, sed)."; \
-		echo ""; \
-		echo "📝 To rename your project manually on Windows:"; \
-		echo ""; \
-		echo "1. Use your IDE's find and replace feature (e.g., VS Code: Ctrl+Shift+H)"; \
-		echo "2. Replace these terms across all files:"; \
-		echo "   - 'foolstack' → '$(word 2,$(MAKECMDGOALS))'"; \
-		echo "   - 'Foolstack' → '$(shell echo $(word 2,$(MAKECMDGOALS)) | sed 's/^./\u&/' 2>/dev/null || echo $(word 2,$(MAKECMDGOALS)))'"; \
-		echo "   - 'FOOLSTACK' → '$(shell echo $(word 2,$(MAKECMDGOALS)) | tr '[:lower:]' '[:upper:]' 2>/dev/null || echo $(word 2,$(MAKECMDGOALS)))'"; \
-		echo ""; \
-		echo "3. Include these file types: *.py, *.js, *.vue, *.html, *.md, *.yml, *.yaml, *.json, *.toml"; \
-		echo "4. Exclude these folders: .venv, node_modules, .git, data, logs"; \
-		echo ""; \
-		echo "💡 Alternatively, use WSL2 or Git Bash to run this command."; \
-		exit 1; \
-	fi
-	@echo "🔄 Renaming project from foolstack to $(word 2,$(MAKECMDGOALS))..."
-	@# Calculate the different case variations
+	@echo "🔄 Initializing project as $(word 2,$(MAKECMDGOALS))..."
 	@$(eval LOWERCASE := $(word 2,$(MAKECMDGOALS)))
 	@$(eval UPPERCASE := $(shell echo $(word 2,$(MAKECMDGOALS)) | tr '[:lower:]' '[:upper:]'))
 	@$(eval CAPITALIZED := $(shell echo $(word 2,$(MAKECMDGOALS)) | sed 's/^./\u&/'))
-	@# Find all text files and perform replacements
-	@find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.vue" -o -name "*.html" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.env*" -o -name "Makefile" -o -name "Dockerfile*" \) \
+	@find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.vue" -o -name "*.html" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.env*" -o -name "Makefile" -o -name "Dockerfile*" -o -name "Caddyfile*" \) \
 		-not -path "./server/.venv/*" \
 		-not -path "./client/node_modules/*" \
 		-not -path "./.git/*" \
 		-not -path "./data/*" \
-		-not -path "./server/logs/*" \
 		-exec sed -i.bak \
 			-e 's/foolstack/$(LOWERCASE)/g' \
 			-e 's/Foolstack/$(CAPITALIZED)/g' \
 			-e 's/FOOLSTACK/$(UPPERCASE)/g' {} \; 2>/dev/null || \
-	find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.vue" -o -name "*.html" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.env*" -o -name "Makefile" -o -name "Dockerfile*" \) \
+	find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.vue" -o -name "*.html" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.toml" -o -name "*.txt" -o -name "*.env*" -o -name "Makefile" -o -name "Dockerfile*" -o -name "Caddyfile*" \) \
 		-not -path "./server/.venv/*" \
 		-not -path "./client/node_modules/*" \
 		-not -path "./.git/*" \
 		-not -path "./data/*" \
-		-not -path "./server/logs/*" \
 		-exec sed -i '' \
 			-e 's/foolstack/$(LOWERCASE)/g' \
 			-e 's/Foolstack/$(CAPITALIZED)/g' \
 			-e 's/FOOLSTACK/$(UPPERCASE)/g' {} \;
-	@# Clean up backup files
 	@find . -name "*.bak" -type f -delete 2>/dev/null || true
 	@echo "✅ Project renamed to $(word 2,$(MAKECMDGOALS))!"
 	@echo ""
-	@echo "📝 Note: Remember to:"
-	@echo "   - Rebuild containers: make build"
-	@echo "   - Update git remote if needed"
-	@echo "   - Search for any missed references"
+	@echo "📝 Next steps:"
+	@echo "   1. Run 'make setup' to complete initialization"
+	@echo "   2. Update git remote if needed"

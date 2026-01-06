@@ -1,10 +1,11 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 
-from .health import health_check
+from .health import health_check, ping
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("health/", health_check, name="health_check"),
-    path("api/v1/auth/", include("users.urls")),
+    path("api/ping/", ping, name="ping"),
+    path("api/health/", health_check, name="health_check"),
+    path("api/auth/", include("users.urls")),
 ]

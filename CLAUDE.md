@@ -1,211 +1,189 @@
 # Claude Assistant Instructions for Foolstack Projects
 
-This document provides specific instructions for Claude or other AI assistants working on projects based on the Foolstack template (Django + Vue3 dockerized application).
+This document provides specific instructions for Claude or other AI assistants working on projects based on the Foolstack template (Django + Vue3 + Redis + Celery dockerized application).
 
 ## Project Overview
 
 This is a full-stack web application with:
-- **Backend**: Django REST API at `api.{BASE_DOMAIN}`
-- **Frontend**: Vue3 SPA at `{BASE_DOMAIN}`
+- **Backend**: Django REST API
+- **Frontend**: Vue3 SPA
+- **Worker**: Celery for background tasks
+- **Cache/Broker**: Redis
 - **Infrastructure**: Docker, Caddy reverse proxy, SQLite database
 
 ## Key Architecture Decisions
 
-1. **Single .env Configuration**: All services read from root `.env` file
-2. **Domain-based Routing**: Frontend at base domain, API at `api.` subdomain
-3. **Environment Detection**: `ENVIRONMENT` variable switches between dev/prod behavior
-4. **SQLite Database**: Stored in `./data/` directory with volume mounting
+1. **Single Domain Routing**: All traffic goes through Caddy on a single domain
+   - `/api/*` → Django backend
+   - `/admin/*` → Django admin
+   - `/static/*` → Static files
+   - `/*` → Vue frontend
+
+2. **SSL Everywhere**: HTTPS enabled in both dev (self-signed) and production (Let's Encrypt)
+
+3. **Docker Compose Overlays**:
+   - `docker-compose.yml` - Production-safe base config
+   - `docker-compose.dev.yml` - Development overrides (hot reload, port exposure)
+
+4. **Non-root Containers**: Server runs as `appuser` (UID 1000) for security
+
+5. **Data Directory**: All persistent data in `./data/` with proper permissions
 
 ## Working with the Codebase
 
 ### Environment Variables
 
-The entire stack is controlled by these key variables in `.env`:
+Key variables in `.env`:
 
 ```env
-ENVIRONMENT=development|production  # Controls debug mode, CORS, etc.
-BASE_DOMAIN=localhost              # Base for all domain configuration
-VUE_PORT=5173                      # Vue dev server port
-DJANGO_PORT=8000                   # Django server port
+PROJECT_NAME=foolstack          # Used for container/volume naming
+ENVIRONMENT=development         # development or production
+SERVER_DOMAIN=localhost         # Your domain
+SECRET_KEY=...                  # Django secret key (auto-generated)
+REDIS_URL=redis://redis:6379/0  # Redis connection
+CELERY_BROKER_URL=redis://...   # Celery broker
 ```
 
 ### Service Names
 
-When referencing containers in commands or configurations:
-- Django container: `server`
-- Vue container: `client`
-- Caddy container: `caddy`
+- `server` - Django backend
+- `worker` - Celery worker
+- `client` - Vue frontend
+- `redis` - Redis cache/broker
+- `caddy` - Reverse proxy
 
-Note: Container names may be prefixed with the project name (e.g., `myproject_server`)
+Container names are prefixed with PROJECT_NAME (e.g., `foolstack_server`)
 
 ### File Paths
 
-- Django project root: `/app` inside container, `./server` on host
-- Vue project root: `/app` inside container, `./client` on host
-- Database location: `/app/data/db.sqlite3` inside Django container
+- Django project: `/app` in container, `./server` on host
+- Vue project: `/app` in container, `./client` on host
+- Data directory: `/data` in container, `./data` on host
+- Database: `/data/db.sqlite3`
+- Static files: `/data/staticfiles`
+- Media files: `/data/mediafiles`
+- Logs: `/data/logs`
 
-## Common Tasks
+## Makefile Commands
 
-### Initial Setup for New Developers
+### Setup & Lifecycle
+- `make setup` - First-time setup (creates .env, builds, installs deps)
+- `make up` - Start services (auto-detects dev/prod mode)
+- `make down` - Stop services
+- `make restart` - Restart all services
+- `make build` - Build Docker images
+- `make build-clean` - Build without cache
 
-The `make setup` command automates the entire development setup:
+### Development
+- `make deps` - Sync local Python venv + Bun dependencies (for IDE)
+- `make shell` - Django shell
+- `make logs [FLAGS]` - View logs (s=server, c=client, w=worker, r=redis, d=caddy)
+- `make status` - Show system status and health
+- `make urls` - Show access URLs
 
-1. Checks if `.env` exists (won't overwrite)
-2. Creates `.env` with:
-   - Auto-generated secure Django secret key using Python's `secrets` module
-   - Development environment settings
-   - Localhost as base domain
-3. Builds all Docker containers
-4. Starts services
-5. Runs Django migrations
-6. Provides instructions for creating superuser
+### Database
+- `make migrations` - Create Django migrations
+- `make migrate` - Apply migrations
+- `make superuser` - Create admin user
 
-This eliminates manual configuration errors and ensures consistent development environments.
+### Testing
+- `make test` - Run all tests
+- `make test-coverage` - Run tests with coverage report
 
-### Adding Django Apps
+### Project Management
+- `make init <name>` - Rename project from template
+- `make purge` - Nuclear option: wipe everything
 
-Use the make command:
+## Adding New Features
+
+### Creating Django Apps
 ```bash
-make app myappname
+make shell
+python manage.py startapp myapp
 ```
-
-Or manually:
-```bash
-make shell-django
-cd /app
-python manage.py startapp myappname
-```
-
-Don't forget to update `INSTALLED_APPS` in `server/core/settings.py`
+Then add to `INSTALLED_APPS` in `server/core/settings.py`
 
 ### Adding API Endpoints
+1. Create serializers in `server/myapp/serializers.py`
+2. Create views in `server/myapp/views.py`
+3. Add URLs: `path("api/myapp/", include("myapp.urls"))` in `server/core/urls.py`
 
-1. Create serializers in `server/appname/serializers.py`
-2. Create viewsets in `server/appname/views.py`
-3. Register URLs in `server/core/urls.py`
+### Creating Celery Tasks
+```python
+# server/myapp/tasks.py
+from celery import shared_task
 
-### Frontend API Integration
-
-API calls from Vue should use relative paths:
-```javascript
-// In development, Vite proxy handles /api/* routes
-fetch('/api/endpoint')  // Proxied to Django
-
-// Or use the configured API URL
-const apiUrl = import.meta.env.VITE_API_URL
+@shared_task
+def my_background_task(arg):
+    # Do something
+    return result
 ```
 
-## Important Configuration Details
+### Frontend API Calls
+```javascript
+// Use relative paths - Caddy proxies /api/* to Django
+fetch('/api/auth/login/', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)
+})
+```
 
-### CORS Settings
+## Health Endpoints
 
-CORS is automatically configured based on environment:
-- **Development**: Allows `localhost:5173`, `BASE_DOMAIN:5173`
-- **Production**: Allows `https://BASE_DOMAIN`, `https://www.BASE_DOMAIN`
-
-### Django Settings
-
-- `DEBUG` is automatically `True` in development, `False` in production
-- `ALLOWED_HOSTS` includes Django container name for internal Docker networking
-- Static files are collected to `/app/staticfiles` in production
-
-### Makefile Commands
-
-Essential commands:
-- `make setup` → Complete initial setup
-- `make up/down` → Start/stop services
-- `make app <name>` → Create new Django app
-- `make migrations` → Create database migrations
-- `make migrate` → Apply migrations
-- `make superuser` → Create admin user
-- `make shell-django` → Access Django container
-- `make shell-vue` → Access Vue container
-- `make logs` → View all logs
-- `make test` → Run tests
-
-## Security Considerations
-
-When working on this project:
-
-1. **Never commit .env file** - It's gitignored for a reason
-2. **Generate new SECRET_KEY** for production deployments
-3. **Review CORS settings** before deploying
-4. **Default REST permissions** may be `AllowAny` - implement proper authentication
-5. **Update allowed hosts** for production domains
-
-## Development Workflow
-
-1. **Quick Start**: Use `make setup` for automatic development environment setup
-2. **VSCode Integration**: Run `make vscode-setup` to create local Python venv for IDE features
-3. **Hot Reload**: Both Django and Vue auto-reload on file changes
-4. **Database Migrations**: Always run `make migrate` after model changes
-5. **Dependencies**: Update `pyproject.toml` or `package.json`, then rebuild containers
-
-### Dual Environment Setup
-
-This project uses a dual environment approach:
-- **Local .venv**: Created by `make vscode-setup` for VSCode Python interpreter and intellisense
-- **Docker**: Uses system Python (no venv) to avoid volume mount conflicts
-
-Both environments use the same Poetry dependencies, ensuring consistency.
+- `/api/ping/` - Fast healthcheck (database only) - used by Docker
+- `/api/health/` - Comprehensive check (database, Redis, disk space)
 
 ## Production Deployment
 
 1. Set `ENVIRONMENT=production` in `.env`
-2. Update `BASE_DOMAIN` to actual domain
-3. Generate new `DJANGO_SECRET_KEY`
-4. Caddy will auto-provision SSL certificates
-5. Consider switching to PostgreSQL for production
+2. Update `SERVER_DOMAIN` to your actual domain
+3. Ensure `SECRET_KEY` is secure
+4. Run `make up` - Caddy auto-provisions SSL via Let's Encrypt
 
-## Debugging Tips
-
-1. **Check Logs**: `make logs` shows all container output
-2. **Network Issues**: Services communicate using container names (server, client, caddy)
-3. **Permission Errors**: Data directory might need ownership fix
-4. **CORS Errors**: Check if domains match in `.env` and browser URL
-5. **Setup Issues**: The `make setup` command handles most initial configuration automatically
-
-## Testing
-
-- Django tests: `make test`
-- Vue tests: `make shell-vue` then `npm run test`
-- API testing: Use the Django test client or tools like pytest
-
-## File Structure Conventions
+## File Structure
 
 ```
-server/
-├── core/              # Django project settings
-├── authentication/    # User auth app (included in template)
-├── [your apps]/       # Your Django applications
-├── pyproject.toml     # Python dependencies (Poetry)
-└── manage.py
-
-client/
-├── src/
-│   ├── components/    # Vue components
-│   ├── views/         # Vue pages
-│   ├── stores/        # Pinia state management
-│   └── api/           # API client
-└── package.json       # JS dependencies
+foolstack/
+├── server/
+│   ├── core/              # Django project settings
+│   │   ├── settings.py    # Main config
+│   │   ├── celery.py      # Celery setup
+│   │   ├── health.py      # Health endpoints
+│   │   └── urls.py        # URL routing
+│   ├── users/             # User auth app
+│   ├── requirements.txt   # Python deps
+│   └── Dockerfile
+├── client/
+│   ├── src/               # Vue source
+│   ├── package.json       # JS deps
+│   ├── Caddyfile          # Production SPA routing
+│   └── Dockerfile
+├── data/                  # Persistent data (gitignored except .gitkeep)
+│   ├── logs/
+│   ├── staticfiles/
+│   ├── mediafiles/
+│   ├── caddy_data/
+│   └── caddy_config/
+├── docker-compose.yml     # Production config
+├── docker-compose.dev.yml # Development overrides
+├── Caddyfile              # Main reverse proxy config
+├── Makefile               # All commands
+└── .env.example           # Environment template
 ```
-
-## Notes for Modifications
-
-1. **Dockerfile Changes**: Rebuild with `make build`
-2. **Environment Changes**: Restart with `make restart`
-3. **Database Schema**: Run migrations after model changes
-4. **New Dependencies**: Update pyproject.toml/package.json and rebuild
-5. **Adding Services**: Update docker-compose.yml and document changes
 
 ## AI Assistant Best Practices
 
-When assisting with this codebase:
+1. **Use Makefile commands** - Don't use raw docker-compose
+2. **Check existing patterns** before implementing new features
+3. **All API routes under `/api/`** - Caddy routes based on path
+4. **Background tasks via Celery** - Don't use threading or async for long tasks
+5. **Test in Docker** - The local venv is only for IDE support
+6. **Update CLAUDE.md** when adding significant features
 
-1. **Always check existing patterns** before implementing new features
-2. **Use the Makefile commands** instead of raw docker-compose
-3. **Follow the established file structure** for consistency
-4. **Test changes in Docker** to ensure production compatibility
-5. **Update documentation** when adding new features
+## Common Issues
 
-Remember: This setup prioritizes developer experience with hot-reload and simple configuration while remaining production-ready. The template provides a solid foundation - build upon it rather than restructuring it.
+1. **Connection refused**: Check if services are running with `make status`
+2. **Permission errors**: Data directory needs proper permissions (handled by `make up`)
+3. **SSL warnings**: Expected in dev - accept the self-signed certificate
+4. **Hot reload not working**: Check `CHOKIDAR_USEPOLLING` is set in dev overlay

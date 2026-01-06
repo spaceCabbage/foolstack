@@ -1,41 +1,67 @@
-{
-    email {$CADDY_EMAIL}
+# ========================================
+# Foolstack Caddyfile
+# ========================================
+# Single domain setup with path-based routing
+# - /api/* -> Django backend
+# - /admin/* -> Django admin
+# - /static/* -> Static files
+# - /* -> Vue frontend
+#
+# SSL is enabled in both dev and prod:
+# - Development: Self-signed certificate (tls internal)
+# - Production: Let's Encrypt auto-provisioning
+
+# Security headers snippet
+(security_headers) {
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
 }
 
-# Development configuration
-(dev) {
-    tls internal
-}
-
-# Production configuration  
-(prod) {
-    # Auto HTTPS with Let's Encrypt
-}
-
-# Main domain - Vue frontend
-{$BASE_DOMAIN} {
+# Main site
+{$SERVER_DOMAIN:localhost} {
+    # Development: use self-signed certificate
     @isDev expression {env.ENVIRONMENT} == "development"
-    import dev @isDev
-    
-    @isProd expression {env.ENVIRONMENT} == "production"
-    import prod @isProd
-    
-    # In development, proxy to Vue dev server
-    reverse_proxy @isDev client:{$VUE_PORT}
-    
-    # In production, serve built Vue files
-    root @isProd /srv/vue
-    try_files @isProd {path} /index.html
-    file_server @isProd
-}
+    tls @isDev internal
 
-# API subdomain - Django backend
-api.{$BASE_DOMAIN} {
-    @isDevApi expression {env.ENVIRONMENT} == "development"
-    import dev @isDevApi
-    
-    @isProdApi expression {env.ENVIRONMENT} == "production"
-    import prod @isProdApi
-    
-    reverse_proxy server:{$DJANGO_PORT}
+    # Import security headers
+    import security_headers
+
+    # API routes -> Django
+    handle /api/* {
+        reverse_proxy server:8000
+    }
+
+    # Admin routes -> Django
+    handle /admin/* {
+        reverse_proxy server:8000
+    }
+
+    # Static files from Django (production)
+    handle /static/* {
+        root * /staticfiles
+        file_server
+    }
+
+    # Health check endpoint for Caddy itself
+    handle /caddy-health {
+        respond "OK" 200
+    }
+
+    # Frontend -> Vue client
+    # Development: proxy to Vite dev server
+    # Production: serve static files from client container
+    @isDevelopment expression {env.ENVIRONMENT} == "development"
+    handle @isDevelopment {
+        reverse_proxy client:{$CLIENT_PORT:5173}
+    }
+
+    # Production: proxy to client container (serving via internal Caddy)
+    @isProduction expression {env.ENVIRONMENT} != "development"
+    handle @isProduction {
+        reverse_proxy client:{$CLIENT_PORT:80}
+    }
 }

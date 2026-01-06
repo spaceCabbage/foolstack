@@ -11,14 +11,10 @@ def setup_logging():
     from core.settings import BASE_DIR
     """Configure loguru for Django with colors and rotation."""
     
-    # Remove default logger
     logger.remove()
-    
-    # Get environment settings
     environment = os.getenv("ENVIRONMENT", "development")
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     
-    # Use /app/logs inside server directory 
     
     log_dir = BASE_DIR / "logs"
     log_dir.mkdir(exist_ok=True)

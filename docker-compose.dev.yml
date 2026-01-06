@@ -1,0 +1,41 @@
+# ========================================
+# Docker Compose Development Overrides
+# ========================================
+# This file extends docker-compose.yml with development-specific configuration
+# Automatically loaded in development mode via Makefile
+#
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  # Expose Redis port for debugging tools
+  redis:
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+
+  # Mount source code for hot-reload in development
+  server:
+    volumes:
+      - ./server:/app
+      - ./data:/data
+
+  # Mount source code for hot-reload in development
+  worker:
+    volumes:
+      - ./server:/app
+      - ./data:/data
+
+  # Enable HMR (Hot Module Replacement) for Vue/Vite in development
+  client:
+    volumes:
+      - ./client:/app
+      - /app/node_modules # Preserve node_modules from image
+    environment:
+      # Enable polling for file watching in Docker volumes
+      # Required for Vite HMR to detect file changes across Docker volumes
+      CHOKIDAR_USEPOLLING: 'true'
+      CHOKIDAR_INTERVAL: '1000'
+
+  # Development Caddy config
+  caddy:
+    environment:
+      - CLIENT_PORT=5173 # Route to Vite dev server instead of production port

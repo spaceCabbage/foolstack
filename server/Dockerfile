@@ -1,55 +1,62 @@
-# Multi-stage build for optimal caching and performance
-FROM python:3.13.5-slim AS base
+FROM python:3.13-slim AS base
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PIP_NO_CACHE_DIR=1
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Minimal system dependencies - most Python packages are now wheel-based
-# Only install if you add packages requiring compilation later
-
-# Install Poetry and (required for pkg_resources in Python 3.13+)
-RUN pip install poetry==2.1.3 
-
-# Configure Poetry - use system Python to avoid venv issues with volume mounts
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-# Dependencies installation layer (cached until pyproject.toml/poetry.lock changes)
-COPY pyproject.toml poetry.lock* ./
-RUN poetry install --only main && rm -rf $POETRY_CACHE_DIR
+# Create non-root user (UID 1000 matches most Linux users)
+RUN groupadd -g 1000 appuser && \
+    useradd -r -u 1000 -g appuser appuser && \
+    chown -R appuser:appuser /app
 
-# Development stage
+FROM base AS dependencies
+
+COPY requirements.txt ./
+
+# Create venv with copies (not symlinks) for IDE compatibility
+RUN python3 -m venv --copies /app/.venv && \
+    /app/.venv/bin/pip install --upgrade pip && \
+    /app/.venv/bin/pip install -r requirements.txt
+
 FROM base AS development
 
-# Install all dependencies (including dev)
-RUN poetry install && rm -rf $POETRY_CACHE_DIR
+COPY --chown=appuser:appuser --from=dependencies /app/.venv /app/.venv
+COPY --chown=appuser:appuser . .
 
-# Copy source code (this layer changes frequently)
-COPY . .
+ENV PATH="/app/.venv/bin:$PATH"
 
-# Create directories
-RUN mkdir -p /app/data /app/logs
+# Create data directories with proper ownership
+RUN mkdir -p /data/staticfiles /data/mediafiles /data/logs && \
+    chown appuser:appuser /data /data/staticfiles /data/mediafiles /data/logs
 
-# Development command
-CMD ["sh", "-c", "poetry run python manage.py migrate && poetry run python manage.py runserver 0.0.0.0:8000"]
+USER appuser
+EXPOSE 8000
 
-# Production stage
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
 FROM base AS production
 
-# Copy source code
-COPY . .
+COPY --chown=appuser:appuser --from=dependencies /app/.venv /app/.venv
+COPY --chown=appuser:appuser . .
 
-# Create directories
-RUN mkdir -p /app/data /app/logs
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Create data directories with proper ownership
+RUN mkdir -p /data/staticfiles /data/mediafiles /data/logs && \
+    chown appuser:appuser /data /data/staticfiles /data/mediafiles /data/logs
 
 # Collect static files
-RUN poetry run python manage.py collectstatic --noinput || true
+RUN python manage.py collectstatic --noinput || true
 
-# Production command
-CMD ["sh", "-c", "poetry run python manage.py migrate && poetry run gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --timeout ${GUNICORN_TIMEOUT:-30} --keepalive ${GUNICORN_KEEPALIVE:-2} --max-requests ${GUNICORN_MAX_REQUESTS:-1000} --max-requests-jitter ${GUNICORN_MAX_REQUESTS_JITTER:-100} --preload --access-logfile - --error-logfile -"]
+USER appuser
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/api/ping/ || exit 1
+
+CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--threads", "2", "--worker-class", "gthread", "--max-requests", "1000", "--max-requests-jitter", "50", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "--log-level", "info"]

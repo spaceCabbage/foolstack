@@ -1,0 +1,14 @@
+# Production Caddyfile for Vue SPA
+# Handles client-side routing with try_files fallback
+
+:80 {
+    root * /app/dist
+
+    # SPA routing - fallback to index.html for client-side routes
+    try_files {path} /index.html
+
+    file_server
+
+    # Enable compression
+    encode gzip
+}
