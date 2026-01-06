@@ -1,189 +1,202 @@
-# 🚀 Foolstack - Full Stack Django + Vue3 Template
+# Foolstack
 
-A production-ready, batteries-included full stack web application template featuring Django REST API, Vue 3 SPA, Docker containerization, and automatic SSL with Caddy.
+A production-ready full-stack web application template with Django, Vue 3, Redis, Celery, and automatic HTTPS.
 
-## 🎯 Why Foolstack?
+## Tech Stack
 
-Foolstack eliminates the tedious setup of a modern full-stack application by providing:
+| Layer        | Technology                         |
+|--------------|------------------------------------|
+| Backend      | Django 5.1 + Django REST Framework |
+| Frontend     | Vue 3 + Vite + Tailwind CSS        |
+| Worker       | Celery (background tasks)          |
+| Cache/Broker | Redis                              |
+| Proxy        | Caddy (automatic HTTPS)            |
+| Database     | SQLite (configurable)              |
+| Containers   | Docker + Docker Compose            |
 
-- **Zero-config development environment** - One command to start developing
-- **Production-ready from day one** - SSL, security headers all configured
-- **Modern tech stack** - Django 5.1, Vue 3, Vite, Docker, Caddy
-- **Developer experience focused** - Hot reload, VSCode integration, comprehensive Makefile
-- **Best practices built-in** - JWT auth, environment-based config, proper project structure
-
-## 🏗️ Tech Stack
-
-| Component          | Technology                       | Purpose                                 |
-|--------------------|----------------------------------|-----------------------------------------|
-| Backend            | Django 5.1 + DRF                 | REST API with JWT authentication        |
-| Frontend           | Vue 3 + Vite                     | Modern SPA with hot module replacement  |
-| Database           | SQLite (dev) / PostgreSQL (prod) | Simple development, scalable production |
-| Web Server         | Caddy                            | Automatic HTTPS, reverse proxy          |
-| Container          | Docker + Docker Compose          | Consistent environments                 |
-| Package Management | Poetry (Python) + Bun (JS)       | Modern dependency management            |
-
-## 🚀 Quick Start
-
-### Using as a Template
-
-1. **Use this template on GitHub**:
-   - Click "Use this template" button
-   - Create a new repository
-   - Clone your new repo
-
-2. **Or use GitHub CLI**:
-   ```bash
-   gh repo create myapp --template yourusername/foolstack --clone
-   cd myapp
-   ```
-
-3. **Start developing**:
-   ```bash
-   make setup  # Automated setup - creates .env, builds, migrates
-   make superuser  # Create admin user
-   ```
-
-4. **Access your app**:
-   - Frontend: http://localhost
-   - API: http://api.localhost
-   - Admin: http://api.localhost/admin
-
-## 📚 Documentation
-
-- [**Template Usage Guide**](docs/TEMPLATE_USAGE.md) - How to customize this template for your project
-- [**Developer Guide**](docs/README.md) - Comprehensive development documentation
-- [**AI Assistant Guide**](CLAUDE.md) - Instructions for AI pair programming
-
-## 🛠️ Available Commands
+## Quick Start
 
 ```bash
-# Development
-make setup           # One-command initial setup
-make up              # Start all services
-make down            # Stop all services
-make logs            # View logs from all services
-make status          # Show container status
+# Clone and setup
+git clone https://github.com/spaceCabbage/foolstack.git {you project name here}
+cd myproject
+make setup
 
-# Django
-make app <name>      # Create a new Django app
-make migrations      # Create database migrations
-make migrate         # Apply database migrations
-make superuser       # Create admin user
-make test            # Run tests
-make shell-django    # Django container shell
-make shell-vue       # Vue container shell
+# Start services
+make up
+make migrate
+make superuser
+```
+
+**Access your app:**
+- Frontend: https://localhost
+
+- API: https://localhost/api
+- Admin: https://localhost/admin
+- Health: https://localhost/api/health/
+
+> Note: Development uses self-signed certificates. Accept the browser warning.
+
+## Architecture
+
+Single domain with path-based routing:
+
+```
+https://localhost/
+├── /           → Vue SPA (frontend)
+├── /api/*      → Django REST API
+├── /admin/*    → Django Admin
+└── /static/*   → Static files
+```
+
+All traffic flows through Caddy reverse proxy which handles SSL termination.
+
+## Project Structure
+
+```
+foolstack/
+├── server/                 # Django backend
+│   ├── core/               # Project settings, URLs, health checks
+│   ├── users/              # Custom user model + auth
+│   ├── requirements.txt    # Python dependencies
+│   └── Dockerfile
+├── client/                 # Vue 3 frontend
+│   ├── src/
+│   │   ├── components/     # Vue components
+│   │   ├── apiClient/      # Axios API client
+│   │   └── App.vue
+│   ├── package.json        # JS dependencies (Bun)
+│   └── Dockerfile
+├── data/                   # Persistent data (gitignored)
+│   ├── logs/
+│   ├── staticfiles/
+│   ├── mediafiles/
+│   └── db.sqlite3
+├── docker-compose.yml      # Production config
+├── docker-compose.dev.yml  # Development overrides
+├── Caddyfile               # Reverse proxy config
+├── Makefile                # Developer commands
+├── .env.example            # Environment template
+└── CLAUDE.md               # AI assistant instructions
+```
+
+## Available Commands
+
+```bash
+# Setup & Lifecycle
+make setup          # First-time setup (creates .env, builds, installs deps)
+make up             # Start all services
+make down           # Stop all services
+make restart        # Restart all services
+make status         # Show system health
+make urls           # Show access URLs
+
+# Development
+make logs           # Follow all logs
+make logs s         # Follow server logs only (s=server, c=client, w=worker)
+make shell          # Django shell
+make deps           # Sync local venv + bun for IDE
+
+# Database
+make migrations     # Create Django migrations
+make migrate        # Apply migrations
+make superuser      # Create admin user
 
 # Building
-make build           # Smart rebuild with caching
-make build-clean     # Full rebuild (no cache)
+make build          # Build Docker images
+make build-clean    # Build without cache
 
-# IDE Setup
-make vscode-setup    # Configure VSCode Python environment
-make poetry-install  # Install Python deps locally
-make bun-install     # Generate Bun lockfile
+# Testing
+make test           # Run all tests
+make test-coverage  # Run tests with coverage
 
-# Maintenance
-make restart         # Restart all services
-make clean           # Remove containers and volumes
+# Project Management
+make init <name>    # Rename project from template
+make purge          # DANGER: Wipe everything and start fresh
 ```
 
-## 🏗️ Project Structure
+## Configuration
 
-```
-.
-├── server/                # Django backend
-│   ├── core/              # Project settings
-│   ├── authentication/    # JWT auth app (included)
-│   ├── pyproject.toml     # Python dependencies
-│   └── manage.py
-├── client/                # Vue 3 frontend
-│   ├── src/
-│   │   ├── components/    # Reusable components
-│   │   ├── pages/         # Page components
-│   │   ├── stores/        # Pinia stores
-│   │   └── apiClient/     # API client
-│   └── package.json       # JS dependencies
-├── caddy/                 # Web server config
-├── docker-compose.yml     # Container orchestration
-├── Makefile               # Developer commands
-└── .env.example           # Environment template
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-The entire stack is configured via `.env`:
+All configuration via `.env`:
 
 ```env
-ENVIRONMENT=development|production
-BASE_DOMAIN=localhost
-DJANGO_SECRET_KEY=<auto-generated>
-DJANGO_PORT=8000
-VUE_PORT=5173
+# Required
+PROJECT_NAME=foolstack
+DOMAIN=localhost
+ENVIRONMENT=development
+SECRET_KEY=<auto-generated>
+
+# Optional (with defaults)
+LOG_LEVEL=INFO
 DATABASE_NAME=db.sqlite3
 CADDY_EMAIL=admin@example.com
-LOG_LEVEL=INFO
+
+# Ports (all have defaults)
+# CADDY_HTTP_PORT=80
+# CADDY_HTTPS_PORT=443
+# SERVER_PORT=8000
+# CLIENT_PORT=5173
+# REDIS_PORT=6379
 ```
 
-### Domain Configuration
-
-- Frontend: `{BASE_DOMAIN}`
-- API: `api.{BASE_DOMAIN}`
-- Automatic SSL in production via Caddy
-
-## 🚢 Production Deployment
-
-1. Update `.env`:
-   ```env
-   ENVIRONMENT=production
-   BASE_DOMAIN=yourdomain.com
-   ```
-
-2. Build and deploy:
-   ```bash
-   make prod-build
-   make prod-up
-   ```
-
-3. Caddy automatically provisions SSL certificates
-
-## 🎨 Included Features
+## Features
 
 ### Backend
-- ✅ Custom User model with email authentication
-- ✅ JWT authentication system
-- ✅ Health check endpoint
-- ✅ Structured project layout
-- ✅ Poetry dependency management
+- Custom User model (email-based auth)
+- JWT authentication (SimpleJWT)
+- Health check endpoints (`/api/ping/`, `/api/health/`)
+- Celery worker for background tasks
+- Redis caching
+- Structured logging with Loguru
 
 ### Frontend
-- ✅ Vue 3 with Composition API
-- ✅ Vue Router configured
-- ✅ Pinia state management
-- ✅ Vite for fast development
-- ✅ API client setup (connects to backend)
-- ✅ Authentication store
-- ✅ Responsive starter layout
+- Vue 3 with Composition API
+- Vite for fast HMR
+- Tailwind CSS
+- Axios API client configured for `/api`
+- Vue Router ready
 
 ### DevOps
-- ✅ Docker multi-stage builds
-- ✅ Development with hot reload
-- ✅ Production optimizations
-- ✅ Automatic HTTPS with Caddy
-- ✅ Environment-based configuration
-- ✅ VSCode integration
+- Docker multi-stage builds
+- Hot reload in development
+- Automatic HTTPS (self-signed dev, Let's Encrypt prod)
+- Non-root containers (security)
+- Configurable ports
 
-## 🤝 Contributing
+## Production Deployment
 
-This is a template repository designed to be forked and customized. If you have improvements to the template itself:
+```bash
+# Update .env
+ENVIRONMENT=production
+DOMAIN=yourdomain.com
+CADDY_EMAIL=admin@yourdomain.com
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your improvements
-4. Submit a pull request
+# Deploy
+make up
+```
 
----
+Caddy automatically provisions SSL certificates from Let's Encrypt.
 
-**Ready to build something awesome? [Get started now!](#-quick-start)**
+## Documentation
+
+- [API Reference](docs/api-reference.md) - REST endpoints
+- [Authentication](docs/authentication.md) - JWT auth system
+- [Template Usage](docs/TEMPLATE_USAGE.md) - Customizing the template
+- [AI Instructions](CLAUDE.md) - For AI pair programming
+
+## Using as a Template
+
+```bash
+# Option 1: GitHub template
+# Click "Use this template" on GitHub
+
+# Option 2: Clone and rename
+git clone https://github.com/spaceCabbage/foolstack.git {your-project-name}
+cd {your-project-name}
+make init {your-project-name}   # Renames all references
+make setup
+```
+
+## License
+
+MIT

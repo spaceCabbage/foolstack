@@ -28,11 +28,11 @@ Located in `server/users/models.py`, our custom user model extends Django's `Abs
 
 ## API Endpoints
 
-All authentication endpoints are prefixed with `/api/v1/auth/`
+All authentication endpoints are prefixed with `/api/auth/`
 
 ### 1. User Registration
 
-**Endpoint**: `POST /api/v1/auth/register/`
+**Endpoint**: `POST /api/auth/register/`
 
 **Request Body**:
 ```json
@@ -69,7 +69,7 @@ All authentication endpoints are prefixed with `/api/v1/auth/`
 
 ### 2. User Login
 
-**Endpoint**: `POST /api/v1/auth/login/`
+**Endpoint**: `POST /api/auth/login/`
 
 **Request Body**:
 ```json
@@ -97,7 +97,7 @@ All authentication endpoints are prefixed with `/api/v1/auth/`
 
 ### 3. Token Refresh
 
-**Endpoint**: `POST /api/v1/auth/token/refresh/`
+**Endpoint**: `POST /api/auth/token/refresh/`
 
 **Request Body**:
 ```json
@@ -115,7 +115,7 @@ All authentication endpoints are prefixed with `/api/v1/auth/`
 
 ### 4. User Profile
 
-**Endpoint**: `GET /api/v1/auth/profile/`
+**Endpoint**: `GET /api/auth/profile/`
 
 **Headers**: `Authorization: Bearer <access_token>`
 
@@ -133,7 +133,7 @@ All authentication endpoints are prefixed with `/api/v1/auth/`
 
 ### 5. Update Profile
 
-**Endpoint**: `PUT /api/v1/auth/profile/` or `PATCH /api/v1/auth/profile/`
+**Endpoint**: `PUT /api/auth/profile/` or `PATCH /api/auth/profile/`
 
 **Headers**: `Authorization: Bearer <access_token>`
 
@@ -184,7 +184,7 @@ SIMPLE_JWT = {
 ```javascript
 class AuthService {
   constructor() {
-    this.baseURL = '/api/v1/auth';
+    this.baseURL = '/api/auth';
   }
 
   // Register new user
@@ -294,7 +294,7 @@ auth.login('user@example.com', 'password123')
   .catch(err => console.error('Login error:', err));
 
 // Get profile
-auth.makeAuthenticatedRequest('/api/v1/auth/profile/')
+auth.makeAuthenticatedRequest('/api/auth/profile/')
   .then(response => response.json())
   .then(profile => console.log('Profile:', profile));
 ```
@@ -316,7 +316,7 @@ export function useAuth() {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('/api/v1/auth/login/', {
+      const response = await fetch('/api/auth/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -424,7 +424,7 @@ class AuthenticationTestCase(TestCase):
         }
 
     def test_user_registration(self):
-        response = self.client.post('/api/v1/auth/register/', self.user_data)
+        response = self.client.post('/api/auth/register/', self.user_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
@@ -437,7 +437,7 @@ class AuthenticationTestCase(TestCase):
             password='testpass123'
         )
         
-        response = self.client.post('/api/v1/auth/login/', {
+        response = self.client.post('/api/auth/login/', {
             'email': 'test@example.com',
             'password': 'testpass123'
         })

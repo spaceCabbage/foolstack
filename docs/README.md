@@ -1,368 +1,254 @@
 <div align="center">
 
-# 📚 Foolstack Documentation Hub
+# Foolstack Documentation
 
-### *Comprehensive Developer Resources & Technical Guides*
-
-*Everything you need to master the Foolstack platform*
+### Developer Resources & Technical Guides
 
 ---
 
-**🎯 [Quick Start](../README.md#-quick-start) • 🏗️ [Architecture](#-architecture-overview) • 🔐 [Security](./authentication.md) • 🛠️ [API Reference](./api-reference.md)**
+**[Quick Start](../README.md#quick-start) | [Architecture](#architecture) | [API Reference](./api-reference.md) | [Authentication](./authentication.md)**
 
 </div>
 
 ---
 
-## 🎯 Overview
+## Overview
 
-Welcome to the **Foolstack Documentation Hub** – your comprehensive resource for building, deploying, and scaling enterprise-grade web applications. This documentation covers every aspect of the platform, from initial setup to advanced production deployment strategies.
-
-<div align="center">
-
-### 🚀 **Quick Navigation**
-
-| 🎪 **For New Developers**                         | 🏗️ **For Architects**                             | 🔧 **For DevOps**                                |
-|:-------------------------------------------------|:-------------------------------------------------|:------------------------------------------------|
-| [🚀 Quick Start Guide](../README.md#-quick-start) | [🏗️ System Architecture](#-architecture-overview) | [🚢 Deployment Guide](./deployment.md)           |
-| [🎓 Tutorial Series](./tutorials/)                | [📊 Performance Optimization](./performance.md)   | [📊 Monitoring & Observability](./monitoring.md) |
-| [🐛 Troubleshooting](./troubleshooting.md)        | [🔌 API Design Patterns](./api-patterns.md)       | [🔒 Security Hardening](./security-hardening.md) |
-
-</div>
-
-## 📖 Documentation Sections
-
-### 🚀 **Getting Started**
-
-<table>
-<tr>
-<td width="50%">
-
-#### 🎯 **Essential Guides**
-- **[⚡ Installation & Setup](../README.md#-quick-start)**
-  - One-command environment setup
-  - Docker configuration and optimization
-  - Development environment verification
-
-- **[🎓 Your First Application](./tutorials/first-app.md)**
-  - Build a complete feature from scratch
-  - Best practices and conventions
-  - Testing and deployment walkthrough
-
-</td>
-<td width="50%">
-
-#### 🏗️ **Core Concepts**
-- **[🎨 System Architecture](#-architecture-overview)**
-  - Service interaction patterns
-  - Data flow and state management
-  - Scalability considerations
-
-- **[🔧 Development Workflow](./development.md)**
-  - Daily development practices
-  - Debugging and troubleshooting
-  - Performance optimization tips
-
-</td>
-</tr>
-</table>
-
-### 🏗️ **Backend Development**
+Foolstack is a production-ready full-stack template featuring Django REST API, Vue 3 SPA, Redis, Celery, and automatic HTTPS via Caddy.
 
 <div align="center">
 
-| 📚 **Resource**                                       | 🎯 **Focus Area**       | 🛠️ **Complexity Level** | 📋 **Status**  |
-|:-----------------------------------------------------|:-----------------------|:-----------------------|:--------------|
-| **[🔐 Authentication System](./authentication.md)**   | JWT, Custom User Model | 🟢 Beginner             | ✅ Complete    |
-| **[🛠️ API Reference](./api-reference.md)**            | REST Endpoints         | 🟡 Intermediate         | ✅ Complete    |
-| **[💾 Database Models](./models.md)**                 | Data Architecture      | 🟡 Intermediate         | 🚧 In Progress |
-| **[🔌 Custom Endpoints](./custom-endpoints.md)**      | Advanced API Design    | 🔴 Advanced             | 📝 Planned     |
-| **[⚡ Performance Tuning](./backend-performance.md)** | Optimization           | 🔴 Advanced             | 📝 Planned     |
+### Quick Navigation
+
+| For Developers                                | For DevOps                                                  |
+|-----------------------------------------------|-------------------------------------------------------------|
+| [Quick Start](../README.md#quick-start)       | [Production Deployment](../README.md#production-deployment) |
+| [API Reference](./api-reference.md)           | [Configuration](../README.md#configuration)                 |
+| [Authentication](./authentication.md)         | [Docker Setup](#docker-architecture)                        |
+| [Template Customization](./TEMPLATE_USAGE.md) | [Health Monitoring](#health-endpoints)                      |
 
 </div>
 
-### 🎨 **Frontend Development**
+## Documentation
 
 <div align="center">
 
-| 📚 **Resource**                                              | 🎯 **Focus Area**       | 🛠️ **Complexity Level** | 📋 **Status** |
-|:------------------------------------------------------------|:-----------------------|:-----------------------|:-------------|
-| **[⚡ Vue3 Setup Guide](./frontend-setup.md)**               | Component Architecture | 🟢 Beginner             | 📝 Planned    |
-| **[🔌 API Integration](./api-integration.md)**               | HTTP Client Setup      | 🟡 Intermediate         | 📝 Planned    |
-| **[🎨 UI/UX Patterns](./ui-patterns.md)**                    | Design System          | 🟡 Intermediate         | 📝 Planned    |
-| **[📱 PWA Configuration](./pwa-setup.md)**                   | Progressive Web App    | 🔴 Advanced             | 📝 Planned    |
-| **[🚀 Performance Optimization](./frontend-performance.md)** | Bundle Optimization    | 🔴 Advanced             | 📝 Planned    |
+| Document                              | Description                                       | Status   |
+|---------------------------------------|---------------------------------------------------|----------|
+| [API Reference](./api-reference.md)   | REST endpoints, request/response formats          | Complete |
+| [Authentication](./authentication.md) | JWT auth, custom user model, frontend integration | Complete |
+| [Template Usage](./TEMPLATE_USAGE.md) | How to customize this template for your project   | Complete |
+| [AI Instructions](../CLAUDE.md)       | Instructions for AI pair programming              | Complete |
 
 </div>
 
-### 🚀 **DevOps & Deployment**
+## Architecture
 
-<div align="center">
-
-| 📚 **Resource**                                      | 🎯 **Focus Area**     | 🛠️ **Complexity Level** | 📋 **Status** |
-|:----------------------------------------------------|:---------------------|:-----------------------|:-------------|
-| **[🐳 Docker Configuration](./docker-guide.md)**     | Containerization     | 🟡 Intermediate         | 📝 Planned    |
-| **[🚢 Production Deployment](./deployment.md)**      | Scaling & Deployment | 🔴 Advanced             | 📝 Planned    |
-| **[📊 Monitoring & Logging](./monitoring.md)**       | Observability        | 🔴 Advanced             | 📝 Planned    |
-| **[🔒 Security Hardening](./security-hardening.md)** | Production Security  | 🔴 Advanced             | 📝 Planned    |
-| **[⚡ CI/CD Pipelines](./cicd.md)**                  | Automation           | 🔴 Advanced             | 📝 Planned    |
-
-</div>
-
-## 🏗️ Architecture Overview
-
-### 🎨 **High-Level System Design**
+### System Overview
 
 <div align="center">
 
 ```mermaid
 graph TB
-    subgraph "🌍 External Layer"
-        Users[👥 End Users]
-        CDN[🚀 CDN/Cache Layer]
-        LB[⚖️ Load Balancer]
+    subgraph "Client Browser"
+        User[User]
     end
-    
-    subgraph "🛡️ Security Layer"
-        WAF[🛡️ Web Application Firewall]
-        SSL[🔒 SSL/TLS Termination]
-        Auth[🔐 JWT Authentication]
+
+    subgraph "Caddy Reverse Proxy"
+        SSL[HTTPS/SSL]
+        Router[Path Router]
     end
-    
-    subgraph "🎨 Presentation Layer"
-        Vue[🎨 Vue3 Frontend]
-        Static[📁 Static Assets]
-        PWA[📱 PWA Features]
+
+    subgraph "Application Layer"
+        Vue[Vue 3 SPA]
+        Django[Django REST API]
+        Admin[Django Admin]
     end
-    
-    subgraph "🔧 Application Layer"
-        API[🔧 Django REST API]
-        BL[💼 Business Logic]
-        Serializers[📊 Data Serializers]
+
+    subgraph "Background Processing"
+        Celery[Celery Worker]
     end
-    
-    subgraph "💾 Data Layer"
-        DB[(💾 Database)]
-        Cache[⚡ Redis Cache]
-        Files[📁 File Storage]
+
+    subgraph "Data Layer"
+        Redis[(Redis)]
+        SQLite[(SQLite)]
     end
-    
-    subgraph "🚀 Infrastructure Layer"
-        Docker[🐳 Docker Containers]
-        Caddy[🌐 Caddy Proxy]
-        Monitor[📊 Monitoring]
-    end
-    
-    Users --> CDN
-    CDN --> LB
-    LB --> WAF
-    WAF --> SSL
-    SSL --> Vue
-    SSL --> API
-    
-    Vue --> Auth
-    Auth --> API
-    API --> BL
-    BL --> Serializers
-    Serializers --> DB
-    API --> Cache
-    API --> Files
-    
-    Vue -.-> Static
-    Vue -.-> PWA
-    
-    Docker --> Vue
-    Docker --> API
-    Docker --> DB
-    Caddy --> Docker
-    Monitor --> Docker
+
+    User --> SSL
+    SSL --> Router
+
+    Router -->|"/"| Vue
+    Router -->|"/api/*"| Django
+    Router -->|"/admin/*"| Admin
+
+    Django --> SQLite
+    Django --> Redis
+    Celery --> Redis
+    Celery --> SQLite
+
+    Vue -.->|"API calls"| Django
 ```
 
 </div>
 
-### ⚙️ **Technology Stack Matrix**
+### Request Flow
+
+1. **User Request** → Caddy (SSL termination)
+2. **Path Routing**:
+   - `/` → Vue SPA
+   - `/api/*` → Django REST API
+   - `/admin/*` → Django Admin
+3. **Authentication** → JWT token validation
+4. **Business Logic** → Django views/serializers
+5. **Data Access** → SQLite + Redis cache
+6. **Response** → JSON back through Caddy
+
+### Technology Stack
 
 <table>
 <tr>
 <td width="25%">
 
-#### 🏗️ **Backend Core**
-- **Framework**: Django 5.2.4
-- **API Layer**: DRF 3.14.0
-- **Authentication**: Simple JWT
-- **ORM**: Django ORM
-- **Validation**: DRF Serializers
-- **Admin**: Django Admin
+#### Backend
+- **Framework**: Django 5.1
+- **API**: Django REST Framework
+- **Auth**: SimpleJWT
+- **Tasks**: Celery
+- **Logging**: Loguru
 
 </td>
 <td width="25%">
 
-#### 🎨 **Frontend Core**
-- **Framework**: Vue.js 3.x
-- **Build System**: Vite 4.x
-- **Language**: JavaScript/TS
-- **State**: Composition API
+#### Frontend
+- **Framework**: Vue 3
+- **Build**: Vite
+- **Styling**: Tailwind CSS
+- **HTTP**: Axios
 - **Routing**: Vue Router
-- **HTTP**: Fetch API
 
 </td>
 <td width="25%">
 
-#### 🗄️ **Data & Storage**
-- **Database**: SQLite/PostgreSQL
-- **Cache**: Redis (optional)
-- **Files**: Local/S3 compatible
-- **Search**: Full-text search
-- **Backup**: Automated scripts
-- **Migration**: Django migrations
+#### Data
+- **Database**: SQLite
+- **Cache**: Redis
+- **Broker**: Redis
+- **Files**: Local storage
 
 </td>
 <td width="25%">
 
-#### 🚀 **Infrastructure**
-- **Containers**: Docker/Compose
-- **Proxy**: Caddy 2.8
-- **SSL**: Auto Let's Encrypt
-- **Monitoring**: Health checks
-- **Logging**: Structured logs
-- **Deployment**: Zero-downtime
+#### Infrastructure
+- **Containers**: Docker
+- **Proxy**: Caddy 2
+- **SSL**: Auto (Let's Encrypt)
+- **Compose**: Overlay pattern
 
 </td>
 </tr>
 </table>
 
-### 🔄 **Request Flow Architecture**
+## Docker Architecture
 
-<details>
-<summary><strong>📊 Detailed Request Processing Flow</strong></summary>
+### Services
 
-1. **🌍 User Request** → Caddy Proxy (SSL termination, routing)
-2. **🔒 Security Layer** → validation, rate limiting
-3. **🎨 Frontend Route** → Vue Router, component loading
-4. **🔌 API Request** → Authentication header injection
-5. **🔐 JWT Validation** → Token verification, user context
-6. **🛠️ Business Logic** → Django view processing
-7. **📊 Data Serialization** → DRF serializer validation
-8. **💾 Database Query** → ORM query execution
-9. **📤 Response Formation** → JSON response structure
-10. **🎨 UI Update** → Vue reactive state updates
+| Service  | Container         | Purpose             | Port            |
+|----------|-------------------|---------------------|-----------------|
+| `server` | Django + Gunicorn | REST API            | 8000 (internal) |
+| `client` | Vue + Vite        | Frontend SPA        | 5173 (internal) |
+| `worker` | Celery            | Background tasks    | -               |
+| `redis`  | Redis 7           | Cache + broker      | 6379            |
+| `caddy`  | Caddy 2           | Reverse proxy + SSL | 80, 443         |
 
-</details>
+### Compose Overlay Pattern
 
-## 🛠️ **Developer Tools & Resources**
-
-### 🎯 **Essential Development Tools**
-
-<div align="center">
-
-| 🛠️ **Tool Category**          | 📋 **Recommended Tools**                 | 🎯 **Purpose**                        |
-|:-----------------------------|:----------------------------------------|:-------------------------------------|
-| **🏗️ Backend Development**    | Django Debug Toolbar, Django Extensions | API debugging & optimization         |
-| **🎨 Frontend Development**   | Vue DevTools, Vite HMR                  | Component debugging & hot reload     |
-| **🐳 Container Management**   | Docker Desktop, Portainer               | Container orchestration & monitoring |
-| **📊 Database Management**    | DB Browser for SQLite, pgAdmin          | Database administration              |
-| **🔍 Testing & QA**           | Pytest, Jest, Cypress                   | Automated testing frameworks         |
-| **📈 Performance Monitoring** | Django Silk, Lighthouse                 | Performance profiling & analysis     |
-
-</div>
-
-### 🎓 **Learning Resources**
-
-<details>
-<summary><strong>📚 Recommended Learning Path</strong></summary>
-
-#### 🥇 **Beginner Path** (0-3 months)
-1. **Complete the [Quick Start Guide](../README.md#-quick-start)**
-2. **Follow [First Application Tutorial](./tutorials/first-app.md)**
-3. **Study [Authentication Implementation](./authentication.md)**
-4. **Practice with [API Reference](./api-reference.md)**
-
-#### 🥈 **Intermediate Path** (3-6 months)
-1. **Master [Custom Endpoints](./custom-endpoints.md)**
-2. **Implement [Advanced UI Patterns](./ui-patterns.md)**
-3. **Configure [Performance Optimization](./performance.md)**
-4. **Setup [Testing Strategies](./testing.md)**
-
-#### 🥉 **Advanced Path** (6+ months)
-1. **Architect [Microservices Migration](./microservices.md)**
-2. **Implement [Advanced Security](./security-hardening.md)**
-3. **Master [Production Deployment](./deployment.md)**
-4. **Contribute to [Open Source](./contributing.md)**
-
-</details>
-
-## 🤝 Contributing to Documentation
-
-### 📝 **Documentation Standards**
-
-We maintain high-quality documentation through:
-
-- **📊 Clear Structure** → Consistent formatting and organization
-- **🎯 Practical Examples** → Real-world code samples and use cases
-- **🔍 Comprehensive Coverage** → Every feature thoroughly documented
-- **🚀 Regular Updates** → Documentation stays current with codebase
-- **👥 Community Input** → Feedback-driven improvements
-
-### 🛠️ **How to Contribute**
-
-<details>
-<summary><strong>📋 Documentation Contribution Workflow</strong></summary>
-
-```bash
-# 1️⃣ Fork and clone documentation
-git clone https://github.com/yourusername/foolstack.git
-cd foolstack/docs
-
-# 2️⃣ Create documentation branch
-git checkout -b docs/improve-auth-guide
-
-# 3️⃣ Make improvements
-# Edit existing files or create new ones
-# Follow the documentation style guide
-
-# 4️⃣ Test documentation locally
-# Ensure all links work and formatting is correct
-
-# 5️⃣ Submit pull request
-git add .
-git commit -m "docs: improve authentication guide with examples"
-git push origin docs/improve-auth-guide
-# Open PR on GitHub
+```
+docker-compose.yml          # Base production config
+docker-compose.dev.yml      # Development overrides (hot reload, port exposure)
 ```
 
-</details>
+Development mode (`ENVIRONMENT=development`) automatically uses both files.
 
-## 🆘 Support & Community
+## Health Endpoints
 
-### 💬 **Getting Help**
+| Endpoint       | Purpose          | Checks                      |
+|----------------|------------------|-----------------------------|
+| `/api/ping/`   | Fast healthcheck | Database connectivity       |
+| `/api/health/` | Comprehensive    | Database, Redis, disk space |
 
-<div align="center">
+Used by Docker healthchecks and monitoring systems.
 
-| 🎯 **Issue Type**               | 📍 **Best Resource**                                                         | ⏱️ **Response Time** |
-|:-------------------------------|:----------------------------------------------------------------------------|:--------------------|
-| **🐛 Bug Reports**              | [GitHub Issues](https://github.com/yourusername/foolstack/issues)           | 1-2 business days   |
-| **❓ General Questions**        | [GitHub Discussions](https://github.com/yourusername/foolstack/discussions) | Community-driven    |
-| **💡 Feature Requests**         | [GitHub Issues](https://github.com/yourusername/foolstack/issues)           | Weekly review       |
-| **🚀 Urgent Production Issues** | [Priority Support](mailto:support@foolstack.dev)                            | 4-6 hours           |
+## Environment Configuration
 
-</div>
+All configuration via `.env` file. See [.env.example](../.env.example) for full documentation.
 
-### 🎯 **Documentation Feedback**
+### Required Variables
 
-Found an issue with the documentation? Help us improve:
+```env
+PROJECT_NAME=foolstack      # Container/volume naming
+DOMAIN=localhost            # Your domain
+ENVIRONMENT=development     # development or production
+SECRET_KEY=<generated>      # Django secret key
+```
 
-- **📝 [Suggest Improvements](https://github.com/yourusername/foolstack/issues/new?template=documentation.md)**
-- **🔍 [Report Missing Information](https://github.com/yourusername/foolstack/discussions)**
-- **⭐ [Contribute Examples](./contributing.md)**
+### Optional Variables
+
+```env
+LOG_LEVEL=INFO              # DEBUG, INFO, WARNING, ERROR
+DATABASE_NAME=db.sqlite3    # SQLite filename
+CADDY_EMAIL=admin@...       # Let's Encrypt notifications
+```
+
+### Port Configuration
+
+All ports have sensible defaults but can be customized:
+
+```env
+CADDY_HTTP_PORT=80
+CADDY_HTTPS_PORT=443
+SERVER_PORT=8000
+CLIENT_PORT=5173
+REDIS_PORT=6379
+```
+
+## Development Workflow
+
+### Daily Commands
+
+```bash
+make up          # Start services
+make logs s      # Watch server logs
+make shell       # Django shell for debugging
+make down        # Stop services
+```
+
+### Adding Features
+
+1. Create Django app: `make shell` then `python manage.py startapp myapp`
+2. Add to `INSTALLED_APPS` in `server/core/settings.py`
+3. Create models, serializers, views
+4. Add URL route in `server/core/urls.py`
+5. Run `make migrations && make migrate`
+
+### Testing
+
+```bash
+make test              # Run all tests
+make test-coverage     # With coverage report
+```
+
+## Security Features
+
+- **HTTPS Everywhere**: Self-signed (dev), Let's Encrypt (prod)
+- **Non-root Containers**: Server runs as `appuser` (UID 1000)
+- **JWT Authentication**: Short-lived access tokens + refresh rotation
+- **CSRF Protection**: Enabled for session-based admin
+- **Security Headers**: Via Caddy (X-Frame-Options, etc.)
 
 ---
 
 <div align="center">
 
-**📚 Happy Learning & Building! 🚀**
-
-*This documentation is continuously updated. Last updated: $(date)*
-
-[⬆️ Back to Top](#-foolstack-documentation-hub) • [🏠 Main README](../README.md) • [🤝 Contributing](./contributing.md)
+**[Back to README](../README.md) | [API Reference](./api-reference.md) | [Authentication](./authentication.md)**
 
 </div>

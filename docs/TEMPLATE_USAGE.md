@@ -1,143 +1,76 @@
-# 📖 Foolstack Template Usage Guide
+# Template Customization Guide
 
-This guide will help you customize the Foolstack template for your specific project needs.
+How to customize Foolstack for your project.
 
-## 🎯 Getting Started with the Template
+> For initial setup, see the [Quick Start](../README.md#quick-start) in the main README.
 
-### 1. Create Your Project
+## Rename the Project
 
-#### Option A: GitHub Template (Recommended)
+Use `make init` to rename all references from "foolstack" to your project name:
+
 ```bash
-# Using GitHub UI:
-# 1. Go to the foolstack repository
-# 2. Click "Use this template" button
-# 3. Name your new repository
-# 4. Clone your new repo
-
-# Using GitHub CLI:
-gh repo create myproject --template yourusername/foolstack --clone
-cd myproject
-```
-
-#### Option B: Manual Clone
-```bash
+# Clone the template
 git clone https://github.com/yourusername/foolstack.git myproject
 cd myproject
-rm -rf .git
-git init
-git add .
-git commit -m "Initial commit from foolstack template"
-```
 
-### 2. Initial Setup
+# Rename all references
+make init myproject
 
-```bash
-# One-command setup
+# Now run setup
 make setup
-
-# This automatically:
-# - Creates .env with secure defaults
-# - Builds all Docker containers
-# - Runs database migrations
-# - Starts all services
-
-# Create your admin user
-make superuser
 ```
 
-### 3. Verify Everything Works
+This updates:
+- Container names (`myproject_server`, `myproject_client`, etc.)
+- Volume names
+- Code references
+- Documentation
 
-- Frontend: http://localhost
-- API: http://api.localhost
-- Admin: http://api.localhost/admin
-
-## 🔧 Customization Steps
-
-### 1. Update Project Metadata
-
-#### Backend (Django)
-Edit `server/pyproject.toml`:
-```toml
-[tool.poetry]
-name = "myproject"
-description = "My awesome project"
-authors = ["Your Name <you@example.com>"]
-```
-
-Edit `server/core/settings.py`:
-```python
-# Update the project name in settings
-WSGI_APPLICATION = 'core.wsgi.application'  # Keep as 'core'
-```
-
-#### Frontend (Vue)
-Edit `client/package.json`:
-```json
-{
-  "name": "myproject-frontend",
-  "version": "0.1.0",
-  "description": "My project frontend"
-}
-```
-
-Edit `client/index.html`:
-```html
-<title>My Project</title>
-```
-
-### 2. Configure Your Domain
-
-For local development, update `.env`:
-```env
-BASE_DOMAIN=myproject.local
-```
-
-Add to `/etc/hosts`:
-```
-127.0.0.1 myproject.local
-127.0.0.1 api.myproject.local
-```
-
-### 3. Create Your First App
+## Adding Django Apps
 
 ```bash
-# Create a Django app
-make app todos
+# Start the shell
+make shell
 
-# This creates server/todos/
-# Don't forget to add it to INSTALLED_APPS in settings.py
+# Create a new app
+python manage.py startapp todos
+exit
 ```
 
-### 4. Remove Template Branding
+Then add to `INSTALLED_APPS` in `server/core/settings.py`:
 
-1. Update `client/src/App.vue` - Remove foolstack references
-2. Update `client/src/components/` - Customize components
-3. Update `server/core/urls.py` - Change API title
-4. Update container names in `docker-compose.yml` (optional)
+```python
+INSTALLED_APPS = [
+    # ... existing apps
+    "todos",
+]
+```
 
-## 🏗️ Common Customizations
-
-### Add a Database Model
+## Adding Models
 
 ```python
 # server/todos/models.py
 from django.db import models
-from authentication.models import User
+from django.conf import settings
 
 class Todo(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
 ```
 
 ```bash
-# Create and apply migrations
 make migrations
 make migrate
 ```
 
-### Add an API Endpoint
+## Adding API Endpoints
+
+### Serializer
 
 ```python
 # server/todos/serializers.py
@@ -147,9 +80,13 @@ from .models import Todo
 class TodoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Todo
-        fields = '__all__'
-        read_only_fields = ('user',)
+        fields = ['id', 'title', 'completed', 'created_at']
+        read_only_fields = ['created_at']
+```
 
+### View
+
+```python
 # server/todos/views.py
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -159,15 +96,86 @@ from .serializers import TodoSerializer
 class TodoViewSet(viewsets.ModelViewSet):
     serializer_class = TodoSerializer
     permission_classes = [IsAuthenticated]
-    
+
     def get_queryset(self):
         return Todo.objects.filter(user=self.request.user)
-    
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 ```
 
-### Add Frontend Routes
+### URLs
+
+```python
+# server/todos/urls.py
+from rest_framework.routers import DefaultRouter
+from .views import TodoViewSet
+
+router = DefaultRouter()
+router.register('', TodoViewSet, basename='todo')
+
+urlpatterns = router.urls
+```
+
+Add to main URLs in `server/core/urls.py`:
+
+```python
+urlpatterns = [
+    # ... existing paths
+    path("api/todos/", include("todos.urls")),
+]
+```
+
+## Customizing the User Model
+
+The custom User model is in `server/users/models.py`. To add fields:
+
+```python
+# server/users/models.py
+class User(AbstractBaseUser, PermissionsMixin):
+    # ... existing fields
+
+    # Add your fields
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    bio = models.TextField(blank=True)
+```
+
+After adding fields:
+
+```bash
+make migrations
+make migrate
+```
+
+Update the serializer in `server/users/serializers.py` to include new fields.
+
+## Adding Celery Tasks
+
+```python
+# server/todos/tasks.py
+from celery import shared_task
+from loguru import logger
+
+@shared_task
+def send_reminder_email(todo_id):
+    from .models import Todo
+
+    todo = Todo.objects.get(id=todo_id)
+    logger.info(f"Sending reminder for: {todo.title}")
+    # Send email logic here
+    return f"Reminder sent for {todo.title}"
+```
+
+Call the task:
+
+```python
+from todos.tasks import send_reminder_email
+send_reminder_email.delay(todo.id)
+```
+
+## Frontend Customization
+
+### Adding Vue Routes
 
 ```javascript
 // client/src/router/index.js
@@ -179,121 +187,67 @@ class TodoViewSet(viewsets.ModelViewSet):
 }
 ```
 
-### Customize Authentication
+### Making API Calls
 
-The template includes email-based authentication. To customize:
+```javascript
+// Using the configured axios client
+import { client } from '@/apiClient/client'
 
-1. Modify `server/authentication/models.py` for user fields
-2. Update `server/authentication/serializers.py` for validation
-3. Adjust `client/src/stores/auth.js` for frontend handling
+// GET request
+const response = await client.get('/todos/')
 
-## 🚀 Production Deployment
-
-### 1. Environment Configuration
-
-Create production `.env`:
-```env
-ENVIRONMENT=production
-BASE_DOMAIN=myproject.com
-DJANGO_SECRET_KEY=<generate-new-secure-key>
-CADDY_EMAIL=admin@myproject.com
+// POST request
+await client.post('/todos/', { title: 'New todo' })
 ```
 
-### 2. Database Migration (Optional)
+## Environment Configuration
 
-For PostgreSQL in production:
+### Development vs Production
+
+The `ENVIRONMENT` variable controls behavior:
+
+| Setting    | Development | Production    |
+|------------|-------------|---------------|
+| DEBUG      | True        | False         |
+| SSL        | Self-signed | Let's Encrypt |
+| Hot reload | Enabled     | Disabled      |
+| Log level  | DEBUG       | INFO          |
+
+### Custom Ports
+
+Override default ports in `.env`:
+
+```env
+SERVER_PORT=8001
+CLIENT_PORT=3000
+REDIS_PORT=6380
+```
+
+## Database Migration (Production)
+
+To use PostgreSQL instead of SQLite:
+
+1. Add `psycopg2-binary` to `server/requirements.txt`
+
+2. Update `server/core/settings.py`:
+
 ```python
-# server/core/settings.py
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST', 'db'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'NAME': os.getenv('DB_NAME', 'foolstack'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'db'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 ```
 
-### 3. Deploy
+3. Add PostgreSQL service to `docker-compose.yml`
 
-```bash
-# Build for production
-make prod-build
-
-# Start production services
-make prod-up
-```
-
-## 📁 Project Structure Decisions
-
-### Why This Structure?
-
-- **Separate client/server directories**: Clear separation of concerns
-- **Docker-first approach**: Consistent environments, easy deployment
-- **Single .env file**: Centralized configuration
-- **Makefile commands**: Simplified developer experience
-
-### Adding New Services
-
-To add Redis, PostgreSQL, or other services:
-
-1. Add to `docker-compose.yml`
-2. Update `.env.example` with new variables
-3. Add Makefile commands if needed
-4. Document in your project README
-
-## 🔍 Debugging Tips
-
-### Common Issues
-
-1. **Port conflicts**: Change `VUE_PORT` or `DJANGO_PORT` in `.env`
-2. **Permission errors**: Check Docker volume permissions
-4. **Module not found**: Rebuild containers after adding dependencies
-
-### Useful Commands
-
-```bash
-# View logs for specific service
-docker-compose logs -f server
-docker-compose logs -f client
-
-# Access Django shell
-make shell-django
-python manage.py shell
-
-# Access database
-make shell-django
-python manage.py dbshell
-
-# Run specific tests
-docker-compose exec server poetry run python manage.py test todos
-```
-
-## 🤝 Best Practices
-
-1. **Keep the template structure**: It's designed for scalability
-2. **Use environment variables**: Never hardcode sensitive data
-3. **Follow Django/Vue conventions**: The template sets good patterns
-4. **Document your changes**: Update README as you customize
-5. **Test in Docker**: Ensure consistency with production
-
-## 🚨 What to Change Immediately
-
-1. **Django SECRET_KEY**: Generate a new one for production
-3. **API permissions**: Default is AllowAny for some endpoints
-4. **Container names**: Optional but recommended for clarity
-5. **Git remote**: Point to your repository
-
-## 📚 Next Steps
-
-1. Review the [Developer Documentation](docs/README.md)
-2. Explore the authentication system
-3. Add your first model and API endpoint
-4. Customize the frontend theme
-5. Set up your CI/CD pipeline
+4. Rebuild: `make build && make up`
 
 ---
 
-Remember: This template is a starting point. Feel free to modify anything to fit your project's needs!
+*See [API Reference](./api-reference.md) for endpoint documentation.*
