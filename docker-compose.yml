@@ -1,4 +1,22 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: ${PROJECT_NAME:-foolstack}_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-${PROJECT_NAME:-foolstack}}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-${PROJECT_NAME:-foolstack}}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-${PROJECT_NAME:-foolstack}} -d ${POSTGRES_DB:-${PROJECT_NAME:-foolstack}}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app_network
+
   redis:
     image: redis:7-alpine
     container_name: ${PROJECT_NAME:-foolstack}_redis
@@ -32,6 +50,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: ${REDIS_PORT:-6379}
       SERVER_PORT: ${SERVER_PORT:-8000}
+      POSTGRES_DB: ${POSTGRES_DB:-${PROJECT_NAME:-foolstack}}
+      POSTGRES_USER: ${POSTGRES_USER:-${PROJECT_NAME:-foolstack}}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
     volumes:
       - ./data/logs:/data/logs
       - ./data/staticfiles:/data/staticfiles
@@ -39,35 +61,14 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      db:
+        condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:$${SERVER_PORT}/api/ping/']
+      test: ['CMD-SHELL', 'curl -f http://localhost:$${SERVER_PORT:-8000}/api/ping/']
       interval: 30s
       timeout: 5s
       retries: 5
       start_period: 10s
-    restart: unless-stopped
-    networks:
-      - app_network
-
-  worker:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-      target: ${ENVIRONMENT:-development}
-    container_name: ${PROJECT_NAME:-foolstack}_worker
-    env_file: .env
-    environment:
-      REDIS_HOST: redis
-      REDIS_PORT: ${REDIS_PORT:-6379}
-    volumes:
-      - ./data/logs:/data/logs
-      - ./data/mediafiles:/data/mediafiles
-    command: python -m celery -A core worker -l ${LOG_LEVEL:-info}
-    depends_on:
-      redis:
-        condition: service_healthy
-      server:
-        condition: service_healthy
     restart: unless-stopped
     networks:
       - app_network
@@ -80,7 +81,7 @@ services:
     container_name: ${PROJECT_NAME:-foolstack}_client
     env_file: .env
     environment:
-      CLIENT_PORT: ${CLIENT_PORT:-80}
+      CLIENT_PORT: ${CLIENT_PORT:-5173}
     depends_on:
       server:
         condition: service_healthy
@@ -103,7 +104,7 @@ services:
       - DOMAIN=${DOMAIN:-localhost}
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - SERVER_PORT=${SERVER_PORT:-8000}
-      - CLIENT_PORT=${CLIENT_PORT:-80}
+      - CLIENT_PORT=${CLIENT_PORT:-5173}
     depends_on:
       - server
       - client
@@ -114,6 +115,8 @@ services:
 volumes:
   redis_data:
     name: ${PROJECT_NAME:-foolstack}_redis_data
+  db_data:
+    name: ${PROJECT_NAME:-foolstack}_db_data
 
 networks:
   app_network:

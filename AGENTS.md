@@ -1,15 +1,16 @@
-# Claude Assistant Instructions for Foolstack Projects
+# AI Assistant Instructions for Foolstack Projects
 
-This document provides specific instructions for Claude or other AI assistants working on projects based on the Foolstack template (Django + Vue3 + Redis + Celery dockerized application).
+This document provides specific instructions for Gemini, Claude, or other AI assistants working on projects based on the Foolstack template (Django + Vue3 + Redis + PostgreSQL dockerized application).
 
 ## Project Overview
 
 This is a full-stack web application with:
 - **Backend**: Django REST API
-- **Frontend**: Vue3 SPA
-- **Worker**: Celery for background tasks
-- **Cache/Broker**: Redis
-- **Infrastructure**: Docker, Caddy reverse proxy, SQLite database
+- **Frontend**: Vue3 SPA (PWA supported)
+- **Background Tasks**: Django 6.0 Native Tasks (Threaded)
+- **Cache/Session**: Redis
+- **Database**: PostgreSQL 16
+- **Infrastructure**: Docker, Caddy reverse proxy
 
 ## Key Architecture Decisions
 
@@ -29,6 +30,10 @@ This is a full-stack web application with:
 
 5. **Data Directory**: All persistent data in `./data/` with proper permissions
 
+6. **Identity & Persistence**:
+   - Models inherit from `core.models.BaseModel` using **ULID** primary keys.
+   - Time-sortable, 26-character unique identifiers.
+
 ## Working with the Codebase
 
 ### Environment Variables
@@ -42,9 +47,13 @@ ENVIRONMENT=development         # development or production
 DOMAIN=localhost                # Your domain (serves SPA + API)
 SECRET_KEY=...                  # Django secret key (auto-generated)
 
+# Database
+POSTGRES_DB=foolstack
+POSTGRES_USER=foolstack
+POSTGRES_PASSWORD=foolstack
+
 # Optional (with sensible defaults)
 LOG_LEVEL=INFO                  # DEBUG, INFO, WARNING, ERROR, CRITICAL
-DATABASE_NAME=db.sqlite3        # SQLite filename in ./data/
 CADDY_EMAIL=admin@example.com   # Let's Encrypt email (production)
 
 # Ports (all have defaults - configure if needed)
@@ -58,9 +67,9 @@ REDIS_PORT=6379                 # Redis internal port
 ### Service Names
 
 - `server` - Django backend
-- `worker` - Celery worker
 - `client` - Vue frontend
-- `redis` - Redis cache/broker
+- `redis` - Redis cache/session
+- `db` - PostgreSQL database
 - `caddy` - Reverse proxy
 
 Container names are prefixed with PROJECT_NAME (e.g., `foolstack_server`)
@@ -70,7 +79,7 @@ Container names are prefixed with PROJECT_NAME (e.g., `foolstack_server`)
 - Django project: `/app` in container, `./server` on host
 - Vue project: `/app` in container, `./client` on host
 - Data directory: `/data` in container, `./data` on host
-- Database: `/data/db.sqlite3`
+- Database: Managed by Docker volumes (`db_data`)
 - Static files: `/data/staticfiles`
 - Media files: `/data/mediafiles`
 - Logs: `/data/logs`
@@ -78,7 +87,7 @@ Container names are prefixed with PROJECT_NAME (e.g., `foolstack_server`)
 ## Makefile Commands
 
 ### Setup & Lifecycle
-- `make setup` - First-time setup (creates .env, builds, installs deps)
+- `make setup` - First-time setup (creates .env, builds, installs deps via `uv` and `bun`)
 - `make up` - Start services (auto-detects dev/prod mode)
 - `make down` - Stop services
 - `make restart` - Restart all services
@@ -86,9 +95,9 @@ Container names are prefixed with PROJECT_NAME (e.g., `foolstack_server`)
 - `make build-clean` - Build without cache
 
 ### Development
-- `make deps` - Sync local Python venv + Bun dependencies (for IDE)
+- `make deps` - Sync local Python venv (`uv`) + Bun dependencies (for IDE)
 - `make shell` - Django shell
-- `make logs [FLAGS]` - View logs (s=server, c=client, w=worker, r=redis, d=caddy)
+- `make logs [FLAGS]` - View logs (s=server, c=client, r=redis, d=caddy)
 - `make status` - Show system status and health
 - `make urls` - Show access URLs
 
@@ -109,62 +118,47 @@ Container names are prefixed with PROJECT_NAME (e.g., `foolstack_server`)
 
 ### Creating Django Apps
 ```bash
-make shell
-python manage.py startapp myapp
+make manage startapp myapp
 ```
 Then add to `INSTALLED_APPS` in `server/core/settings.py`
 
 ### Adding API Endpoints
-1. Create serializers in `server/myapp/serializers.py`
-2. Create views in `server/myapp/views.py`
-3. Add URLs: `path("api/myapp/", include("myapp.urls"))` in `server/core/urls.py`
+1. Inherit models from `core.models.BaseModel`.
+2. Create serializers in `server/myapp/serializers.py`
+3. Create views in `server/myapp/views.py`
+4. Add URLs: `path("api/myapp/", include("myapp.urls"))` in `server/core/urls.py`
 
-### Creating Celery Tasks
+### Background Tasks (Django 6.0)
 ```python
 # server/myapp/tasks.py
-from celery import shared_task
+from django.tasks import task
 
-@shared_task
+@task()
 def my_background_task(arg):
     # Do something
     return result
+
+# Usage:
+# my_background_task.enqueue("some_arg")
 ```
 
-### Frontend API Calls
-```javascript
-// Use relative paths - Caddy proxies /api/* to Django
-fetch('/api/auth/login/', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(data)
-})
-```
+### Frontend Auth (JWT)
+- Store: `client/src/stores/auth.js` (Pinia)
+- API Client: `client/src/apiClient/client.js` (Axios with interceptors for token refresh)
 
 ## Auth Endpoints
 
 The template ships with **registration and password reset disabled by default** for security.
-Enable them by uncommenting in `server/users/urls.py`:
-
-```python
-# Uncomment to enable:
-# path("register/", views.RegisterView.as_view(), name="register"),
-# path("password-reset/", views.PasswordResetRequestView.as_view(), name="password_reset_request"),
-# path("password-reset/confirm/", views.PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
-```
+Enable them by uncommenting in `server/users/urls.py`.
 
 **Enabled by default:**
-- `POST /api/auth/login/` - JWT login (rate limited: 5/min)
-- `POST /api/auth/token/refresh/` - Refresh JWT token
-- `GET/PUT /api/auth/profile/` - View/update user profile (authenticated)
+- `POST /api/auth/login/` - Returns JWT `access` and `refresh` tokens.
+- `POST /api/auth/token/refresh/` - Refresh JWT access token.
+- `GET/PUT /api/auth/profile/` - View/update user profile (authenticated).
 
-**Disabled by default (uncomment to enable):**
-- `POST /api/auth/register/` - User registration (rate limited: 3/min)
-- `POST /api/auth/password-reset/` - Request password reset email (rate limited: 3/min)
-- `POST /api/auth/password-reset/confirm/` - Confirm password reset with token
-
-**Email Configuration (for password reset):**
-- Development: Emails logged to console (no config needed)
-- Production: Set `RESEND_API_KEY` in `.env` (get key at https://resend.com/api-keys)
+**Email Configuration:**
+- Development: Emails logged to console AND enqueued to threaded task.
+- Production: Set `RESEND_API_KEY` for delivery.
 
 ## Health Endpoints
 
@@ -184,16 +178,16 @@ Enable them by uncommenting in `server/users/urls.py`:
 foolstack/
 ├── server/
 │   ├── core/              # Django project settings
+│   │   ├── tasks.py       # Threaded task backend
+│   │   ├── models.py      # BaseModel (ULID)
 │   │   ├── settings.py    # Main config
-│   │   ├── celery.py      # Celery setup
-│   │   ├── health.py      # Health endpoints
 │   │   └── urls.py        # URL routing
 │   ├── users/             # User auth app
-│   ├── requirements.txt   # Python deps
+│   ├── pyproject.toml     # Python deps (uv)
 │   └── Dockerfile
 ├── client/
 │   ├── src/               # Vue source
-│   ├── package.json       # JS deps
+│   ├── package.json       # JS deps (bun)
 │   ├── Caddyfile          # Production SPA routing
 │   └── Dockerfile
 ├── data/                  # Persistent data (gitignored except .gitkeep)
@@ -214,13 +208,6 @@ foolstack/
 1. **Use Makefile commands** - Don't use raw docker-compose
 2. **Check existing patterns** before implementing new features
 3. **All API routes under `/api/`** - Caddy routes based on path
-4. **Background tasks via Celery** - Don't use threading or async for long tasks
+4. **Background tasks via Django 6.0 Tasks** - Don't use Celery or raw threading.
 5. **Test in Docker** - The local venv is only for IDE support
-6. **Update CLAUDE.md** when adding significant features
-
-## Common Issues
-
-1. **Connection refused**: Check if services are running with `make status`
-2. **Permission errors**: Data directory needs proper permissions (handled by `make up`)
-3. **SSL warnings**: Expected in dev - accept the self-signed certificate
-4. **Hot reload not working**: Check `CHOKIDAR_USEPOLLING` is set in dev overlay
+6. **Update AGENTS.md** when adding significant features

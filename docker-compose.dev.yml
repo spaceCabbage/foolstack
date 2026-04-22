@@ -12,35 +12,35 @@ services:
     ports:
       - '${REDIS_PORT:-6379}:6379'
 
+  # Expose DB port for debugging tools
+  db:
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+
   # Mount source code for hot-reload in development
   server:
     volumes:
       - ./server:/app
       - ./data:/data
-
-  # Mount source code for hot-reload in development
-  worker:
-    volumes:
-      - ./server:/app
-      - ./data:/data
+    ports:
+      - "${SERVER_PORT:-8000}:${SERVER_PORT:-8000}"
 
   # Enable HMR (Hot Module Replacement) for Vue/Vite in development
   client:
     volumes:
       - ./client:/app
-      - /app/node_modules # Preserve node_modules from image
+      # Preserve node_modules from image
+      - /app/node_modules
+    ports:
+      - "${CLIENT_PORT:-5173}:5173"
     environment:
-      # Override port for Vite dev server (default 80 in prod)
-      CLIENT_PORT: ${CLIENT_PORT:-5173}
-      # Pass domain to Vite for API client baseURL
-      VITE_DOMAIN: ${DOMAIN:-localhost}
+      # Override port for Vite dev server (default 5173)
+      VITE_PORT: 5173
       # Enable polling for file watching in Docker volumes
-      # Required for Vite HMR to detect file changes across Docker volumes
       CHOKIDAR_USEPOLLING: 'true'
-      CHOKIDAR_INTERVAL: '1000'
 
   # Development Caddy config
   caddy:
     environment:
       # Route to Vite dev server instead of production port
-      - CLIENT_PORT=${CLIENT_PORT:-5173}
+      - CLIENT_PORT=5173

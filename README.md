@@ -1,202 +1,73 @@
-# Foolstack
+# Foolstack - Modern Django + Vue3 Template (2026 Edition)
 
-A production-ready full-stack web application template with Django, Vue 3, Redis, Celery, and automatic HTTPS.
+A high-performance, developer-first template for building modern web applications. Opinionated defaults, surgical architecture, and zero-config deployment.
 
-## Tech Stack
+## ✨ Features
 
-| Layer        | Technology                         |
-|--------------|------------------------------------|
-| Backend      | Django 5.1 + Django REST Framework |
-| Frontend     | Vue 3 + Vite + Tailwind CSS        |
-| Worker       | Celery (background tasks)          |
-| Cache/Broker | Redis                              |
-| Proxy        | Caddy (automatic HTTPS)            |
-| Database     | SQLite (configurable)              |
-| Containers   | Docker + Docker Compose            |
+- **Backend**: Django 6.0 REST API with **uv** for ultra-fast package management.
+- **Frontend**: Vue 3 (Composition API) with **Bun 1.2**, Vite 8, and Tailwind 4.
+- **Authentication**: JWT (SimpleJWT) with automatic token refresh.
+- **Persistence**: PostgreSQL 16 (dev/prod parity) + Redis 7 (Caching & Sessions).
+- **Architecture**:
+    - **ULID Identity**: Models use time-sortable 26-char IDs by default.
+    - **Native Async Tasks**: Django 6.0 Threaded Tasks (no extra worker container needed).
+    - **Mobile First**: Built-in Progressive Web App (PWA) support with service workers.
+- **Infrastructure**:
+    - **Caddy 2**: Automatic SSL, single-domain routing, and production-ready SPA serving.
+    - **Dockerized**: Optimized multi-stage builds for development and production.
+    - **Makefile**: Unified CLI for the entire development lifecycle.
 
-## Quick Start
+## 🚀 Quick Start
 
+### 1. Requirements
+- Docker & Docker Compose
+- `uv` (for local Python IDE support)
+- `bun` (for local JS IDE support)
+
+### 2. Setup
 ```bash
-# Clone and setup
-git clone https://github.com/spaceCabbage/foolstack.git {you project name here}
-cd myproject
 make setup
+```
+This command will:
+- Create your `.env` from the template.
+- Generate a secure `SECRET_KEY`.
+- Install local dependencies for IDE support.
+- Build and start all Docker containers.
 
-# Start services
-make up
+### 3. Initialize Database
+```bash
 make migrate
 make superuser
 ```
 
-**Access your app:**
-- Frontend: https://localhost
+### 4. Develop
+Go to `https://localhost` (accept the self-signed certificate).
+Hot reload is enabled for both backend and frontend.
 
-- API: https://localhost/api
-- Admin: https://localhost/admin
-- Health: https://localhost/api/health/
+## 🛠 Project Management
 
-> Note: Development uses self-signed certificates. Accept the browser warning.
+| Command | Description |
+|---------|-------------|
+| `make up` | Start services |
+| `make down` | Stop services |
+| `make logs` | View logs (`make logs s` for server only) |
+| `make deps` | Sync local dependencies |
+| `make shell` | Open Django shell |
+| `make init <name>` | Rename project from template |
 
-## Architecture
+## 📦 Architecture Highlights
 
-Single domain with path-based routing:
+### Database & Identity
+All models should inherit from `core.models.BaseModel`. It provides a `CharField` ID using ULIDs, ensuring your database remains performant as it scales while keeping IDs sortable and URL-friendly.
 
-```
-https://localhost/
-├── /           → Vue SPA (frontend)
-├── /api/*      → Django REST API
-├── /admin/*    → Django Admin
-└── /static/*   → Static files
-```
+### Background Tasks
+Django 6.0 Native Tasks are configured using the `ThreadedTaskBackend`. You can define tasks using the `@task()` decorator and execute them with `.enqueue()`. No separate `worker` process is required in Docker, simplifying your `docker-compose.yml`.
 
-All traffic flows through Caddy reverse proxy which handles SSL termination.
+### PWA Readiness
+The frontend is pre-configured with `vite-plugin-pwa`. See `PWA_SETUP.md` for instructions on generating icons and configuring the manifest for a native mobile experience.
 
-## Project Structure
-
-```
-foolstack/
-├── server/                 # Django backend
-│   ├── core/               # Project settings, URLs, health checks
-│   ├── users/              # Custom user model + auth
-│   ├── requirements.txt    # Python dependencies
-│   └── Dockerfile
-├── client/                 # Vue 3 frontend
-│   ├── src/
-│   │   ├── components/     # Vue components
-│   │   ├── apiClient/      # Axios API client
-│   │   └── App.vue
-│   ├── package.json        # JS dependencies (Bun)
-│   └── Dockerfile
-├── data/                   # Persistent data (gitignored)
-│   ├── logs/
-│   ├── staticfiles/
-│   ├── mediafiles/
-│   └── db.sqlite3
-├── docker-compose.yml      # Production config
-├── docker-compose.dev.yml  # Development overrides
-├── Caddyfile               # Reverse proxy config
-├── Makefile                # Developer commands
-├── .env.example            # Environment template
-└── CLAUDE.md               # AI assistant instructions
-```
-
-## Available Commands
-
-```bash
-# Setup & Lifecycle
-make setup          # First-time setup (creates .env, builds, installs deps)
-make up             # Start all services
-make down           # Stop all services
-make restart        # Restart all services
-make status         # Show system health
-make urls           # Show access URLs
-
-# Development
-make logs           # Follow all logs
-make logs s         # Follow server logs only (s=server, c=client, w=worker)
-make shell          # Django shell
-make deps           # Sync local venv + bun for IDE
-
-# Database
-make migrations     # Create Django migrations
-make migrate        # Apply migrations
-make superuser      # Create admin user
-
-# Building
-make build          # Build Docker images
-make build-clean    # Build without cache
-
-# Testing
-make test           # Run all tests
-make test-coverage  # Run tests with coverage
-
-# Project Management
-make init <name>    # Rename project from template
-make purge          # DANGER: Wipe everything and start fresh
-```
-
-## Configuration
-
-All configuration via `.env`:
-
-```env
-# Required
-PROJECT_NAME=foolstack
-DOMAIN=localhost
-ENVIRONMENT=development
-SECRET_KEY=<auto-generated>
-
-# Optional (with defaults)
-LOG_LEVEL=INFO
-DATABASE_NAME=db.sqlite3
-CADDY_EMAIL=admin@example.com
-
-# Ports (all have defaults)
-# CADDY_HTTP_PORT=80
-# CADDY_HTTPS_PORT=443
-# SERVER_PORT=8000
-# CLIENT_PORT=5173
-# REDIS_PORT=6379
-```
-
-## Features
-
-### Backend
-- Custom User model (email-based auth)
-- JWT authentication (SimpleJWT)
-- Health check endpoints (`/api/ping/`, `/api/health/`)
-- Celery worker for background tasks
-- Redis caching
-- Structured logging with Loguru
-
-### Frontend
-- Vue 3 with Composition API
-- Vite for fast HMR
-- Tailwind CSS
-- Axios API client configured for `/api`
-- Vue Router ready
-
-### DevOps
-- Docker multi-stage builds
-- Hot reload in development
-- Automatic HTTPS (self-signed dev, Let's Encrypt prod)
-- Non-root containers (security)
-- Configurable ports
-
-## Production Deployment
-
-```bash
-# Update .env
-ENVIRONMENT=production
-DOMAIN=yourdomain.com
-CADDY_EMAIL=admin@yourdomain.com
-
-# Deploy
-make up
-```
-
-Caddy automatically provisions SSL certificates from Let's Encrypt.
-
-## Documentation
-
-- [API Reference](docs/api-reference.md) - REST endpoints
-- [Authentication](docs/authentication.md) - JWT auth system
-- [Template Usage](docs/TEMPLATE_USAGE.md) - Customizing the template
-- [AI Instructions](CLAUDE.md) - For AI pair programming
-
-## Using as a Template
-
-```bash
-# Option 1: GitHub template
-# Click "Use this template" on GitHub
-
-# Option 2: Clone and rename
-git clone https://github.com/spaceCabbage/foolstack.git {your-project-name}
-cd {your-project-name}
-make init {your-project-name}   # Renames all references
-make setup
-```
-
-## License
-
+## 📄 License
 MIT
+
+---
+*Created by Yehuda Freedman*

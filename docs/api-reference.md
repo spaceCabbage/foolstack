@@ -32,7 +32,7 @@ Quick health check used by Docker healthchecks. Verifies database connectivity.
 ```json
 {
   "status": "ok",
-  "timestamp": "2025-01-06T12:00:00Z"
+  "timestamp": "2026-04-22T12:00:00Z"
 }
 ```
 
@@ -69,7 +69,7 @@ Full system health check including database, Redis, and disk space.
 POST /api/auth/register/
 ```
 
-Create a new user account.
+Create a new user account. Returns tokens and user data.
 
 **Request Body**:
 ```json
@@ -86,12 +86,12 @@ Create a new user account.
 ```json
 {
   "user": {
-    "id": 1,
+    "id": "01J9H9F1V2X3Y4Z5A6B7C8D9E0",
     "email": "user@example.com",
     "first_name": "John",
     "last_name": "Doe",
     "full_name": "John Doe",
-    "date_joined": "2025-01-06T12:00:00Z"
+    "date_joined": "2026-04-22T12:00:00Z"
   },
   "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
   "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
@@ -103,7 +103,7 @@ Create a new user account.
 POST /api/auth/login/
 ```
 
-Authenticate an existing user.
+Authenticate an existing user. Returns tokens and user data.
 
 **Request Body**:
 ```json
@@ -117,12 +117,12 @@ Authenticate an existing user.
 ```json
 {
   "user": {
-    "id": 1,
+    "id": "01J9H9F1V2X3Y4Z5A6B7C8D9E0",
     "email": "user@example.com",
     "first_name": "John",
     "last_name": "Doe",
     "full_name": "John Doe",
-    "date_joined": "2025-01-06T12:00:00Z"
+    "date_joined": "2026-04-22T12:00:00Z"
   },
   "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
   "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
@@ -162,12 +162,12 @@ Get the authenticated user's profile. Requires authentication.
 **Response** (200 OK):
 ```json
 {
-  "id": 1,
+  "id": "01J9H9F1V2X3Y4Z5A6B7C8D9E0",
   "email": "user@example.com",
   "first_name": "John",
   "last_name": "Doe",
   "full_name": "John Doe",
-  "date_joined": "2025-01-06T12:00:00Z"
+  "date_joined": "2026-04-22T12:00:00Z"
 }
 ```
 
@@ -192,12 +192,12 @@ Update the authenticated user's profile. Requires authentication.
 **Response** (200 OK):
 ```json
 {
-  "id": 1,
+  "id": "01J9H9F1V2X3Y4Z5A6B7C8D9E0",
   "email": "user@example.com",
   "first_name": "Jane",
   "last_name": "Smith",
   "full_name": "Jane Smith",
-  "date_joined": "2025-01-06T12:00:00Z"
+  "date_joined": "2026-04-22T12:00:00Z"
 }
 ```
 
@@ -251,14 +251,12 @@ All endpoints return consistent error formats:
 
 ## Token Lifetimes
 
-| Token Type | Lifetime   | Notes                             |
-|------------|------------|-----------------------------------|
-| Access     | 60 minutes | Short-lived, use for API requests |
-| Refresh    | 7 days     | Use to get new access tokens      |
+| Token Type | Default Lifetime | Notes                             |
+|------------|------------------|-----------------------------------|
+| Access     | 60 minutes       | Short-lived, use for API requests |
+| Refresh    | 7 days           | Use to get new access tokens      |
 
 Refresh tokens are rotated on use (old token is blacklisted).
-
-
 
 ---
 

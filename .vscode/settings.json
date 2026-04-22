@@ -1,13 +1,13 @@
 {
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
-    "README.md": "redis.conf, LICENSE.md, docker-compose.dev.yml, CLAUDE.md, .dockerignore, .env.example, .gitattributes, .gitignore, Caddyfile, Makefile, docker-compose.yml",
-    "package.json": ".editorconfig, .prettierrc.json, Dockerfile, eslint.config.js, vite.config.js, jsconfig.json, package-lock.json, bun.lockb",
-    "requirements.txt": "Dockerfile, .dockerignore, manage.py, poetry.lock, poetry.toml"
+    "README.md": ".editorconfig, LICENSE.md, docker-compose.dev.yml, AGENTS.md, .dockerignore, .env.example, .gitattributes, .gitignore, Caddyfile, Makefile, docker-compose.yml",
+    "package.json": "Caddyfile, .dockerignore, .prettierrc.json, Dockerfile, eslint.config.js, vite.config.js, jsconfig.json, package-lock.json, bun.lockb",
+    "pyproject.toml": "Dockerfile, .dockerignore, manage.py, uv.lock"
   },
   "explorer.sortOrder": "default",
 
-  "python.defaultInterpreterPath": "./server/.venv/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/server/.venv/bin/python",
   "python.terminal.activateEnvironment": true,
 
   "[python]": {
@@ -18,7 +18,7 @@
     }
   },
 
-  "python.analysis.extraPaths": ["./server"],
+  "python.analysis.extraPaths": ["${workspaceFolder}/server"],
   "python.analysis.typeCheckingMode": "basic",
 
   "files.exclude": {

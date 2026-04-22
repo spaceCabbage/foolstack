@@ -29,12 +29,8 @@ This updates:
 ## Adding Django Apps
 
 ```bash
-# Start the shell
-make shell
-
-# Create a new app
-python manage.py startapp todos
-exit
+# Start a shell or use manage directly
+make manage startapp todos
 ```
 
 Then add to `INSTALLED_APPS` in `server/core/settings.py`:
@@ -48,16 +44,18 @@ INSTALLED_APPS = [
 
 ## Adding Models
 
+Always inherit from `core.models.BaseModel` to get **ULID** primary keys and audit fields (`created_at`, `updated_at`).
+
 ```python
 # server/todos/models.py
 from django.db import models
+from core.models import BaseModel
 from django.conf import settings
 
-class Todo(models.Model):
+class Todo(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     completed = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
@@ -80,20 +78,20 @@ from .models import Todo
 class TodoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Todo
-        fields = ['id', 'title', 'completed', 'created_at']
-        read_only_fields = ['created_at']
+        fields = ['id', 'title', 'completed', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
 ```
 
 ### View
 
 ```python
 # server/todos/views.py
-from rest_framework import viewsets
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from .models import Todo
 from .serializers import TodoSerializer
 
-class TodoViewSet(viewsets.ModelViewSet):
+class TodoListCreateView(ListCreateAPIView):
     serializer_class = TodoSerializer
     permission_classes = [IsAuthenticated]
 
@@ -108,13 +106,12 @@ class TodoViewSet(viewsets.ModelViewSet):
 
 ```python
 # server/todos/urls.py
-from rest_framework.routers import DefaultRouter
-from .views import TodoViewSet
+from django.urls import path
+from . import views
 
-router = DefaultRouter()
-router.register('', TodoViewSet, basename='todo')
-
-urlpatterns = router.urls
+urlpatterns = [
+    path('', views.TodoListCreateView.as_view(), name='todo-list'),
+]
 ```
 
 Add to main URLs in `server/core/urls.py`:
@@ -132,7 +129,7 @@ The custom User model is in `server/users/models.py`. To add fields:
 
 ```python
 # server/users/models.py
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     # ... existing fields
 
     # Add your fields
@@ -149,28 +146,32 @@ make migrate
 
 Update the serializer in `server/users/serializers.py` to include new fields.
 
-## Adding Celery Tasks
+## Adding Background Tasks (Django 6.0)
+
+Foolstack uses the native Django 6.0 task system with a threaded backend. No extra worker container is needed.
 
 ```python
 # server/todos/tasks.py
-from celery import shared_task
+from django.tasks import task
 from loguru import logger
 
-@shared_task
+@task()
 def send_reminder_email(todo_id):
     from .models import Todo
-
-    todo = Todo.objects.get(id=todo_id)
-    logger.info(f"Sending reminder for: {todo.title}")
-    # Send email logic here
-    return f"Reminder sent for {todo.title}"
+    
+    try:
+        todo = Todo.objects.get(id=todo_id)
+        logger.info(f"Processing background task for: {todo.title}")
+        # Task logic here
+    except Todo.DoesNotExist:
+        logger.error(f"Todo {todo_id} not found")
 ```
 
 Call the task:
 
 ```python
 from todos.tasks import send_reminder_email
-send_reminder_email.delay(todo.id)
+send_reminder_email.enqueue(todo.id)
 ```
 
 ## Frontend Customization
@@ -178,19 +179,18 @@ send_reminder_email.delay(todo.id)
 ### Adding Vue Routes
 
 ```javascript
-// client/src/router/index.js
+// client/src/router.js
 {
   path: '/todos',
   name: 'todos',
-  component: () => import('../views/TodosView.vue'),
-  meta: { requiresAuth: true }
+  component: () => import('@/pages/TodosPage.vue'),
 }
 ```
 
 ### Making API Calls
 
 ```javascript
-// Using the configured axios client
+// Using the configured axios client (handles tokens automatically)
 import { client } from '@/apiClient/client'
 
 // GET request
@@ -202,51 +202,14 @@ await client.post('/todos/', { title: 'New todo' })
 
 ## Environment Configuration
 
-### Development vs Production
+### Customizing Ports
 
-The `ENVIRONMENT` variable controls behavior:
-
-| Setting    | Development | Production    |
-|------------|-------------|---------------|
-| DEBUG      | True        | False         |
-| SSL        | Self-signed | Let's Encrypt |
-| Hot reload | Enabled     | Disabled      |
-| Log level  | DEBUG       | INFO          |
-
-### Custom Ports
-
-Override default ports in `.env`:
+Vite runs on **5173** internally in development. If you need to change exposed Caddy ports, modify `.env`:
 
 ```env
-SERVER_PORT=8001
-CLIENT_PORT=3000
-REDIS_PORT=6380
+CADDY_HTTP_PORT=8080
+CADDY_HTTPS_PORT=8443
 ```
-
-## Database Migration (Production)
-
-To use PostgreSQL instead of SQLite:
-
-1. Add `psycopg2-binary` to `server/requirements.txt`
-
-2. Update `server/core/settings.py`:
-
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'foolstack'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'db'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-    }
-}
-```
-
-3. Add PostgreSQL service to `docker-compose.yml`
-
-4. Rebuild: `make build && make up`
 
 ---
 

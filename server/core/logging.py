@@ -20,14 +20,14 @@ def setup_logging():
         return
     _logging_configured = True
 
-    from core.settings import BASE_DIR
+    from core.settings import LOGS_DIR
 
     logger.remove()
     environment = os.getenv("ENVIRONMENT", "development")
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 
-    log_dir = BASE_DIR / "logs"
-    log_dir.mkdir(exist_ok=True)
+    log_dir = LOGS_DIR
+    log_dir.mkdir(exist_ok=True, parents=True)
 
     if environment == "development":
         # Development: colorful console + debug file

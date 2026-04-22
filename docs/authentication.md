@@ -12,15 +12,17 @@ The Foolstack project uses JWT (JSON Web Tokens) for authentication with a custo
 
 ## Custom User Model
 
-Located in `server/users/models.py`, our custom user model extends Django's `AbstractBaseUser`:
+Located in `server/users/models.py`, our custom user model extends Django's `AbstractBaseUser` and inherits from `core.models.BaseModel`.
 
 ### Fields
+- `id` (CharField, unique, primary key) - **ULID** (26 characters)
 - `email` (EmailField, unique) - Primary identifier
 - `first_name` (CharField, optional)
 - `last_name` (CharField, optional)
 - `is_active` (BooleanField, default=True)
 - `is_staff` (BooleanField, default=False)
-- `date_joined` (DateTimeField, auto-generated)
+- `created_at` (DateTimeField, auto-generated)
+- `updated_at` (DateTimeField, auto-updated)
 
 ### Properties
 - `full_name` - Returns concatenated first and last name
@@ -32,7 +34,7 @@ All authentication endpoints are prefixed with `/api/auth/`
 
 ### 1. User Registration
 
-**Endpoint**: `POST /api/auth/register/`
+**Endpoint**: `POST /api/auth/register/` (Disabled by default, uncomment in `users/urls.py` to enable)
 
 **Request Body**:
 ```json
@@ -49,23 +51,17 @@ All authentication endpoints are prefixed with `/api/auth/`
 ```json
 {
   "user": {
-    "id": 1,
+    "id": "01J9H9F1V2X3Y4Z5A6B7C8D9E0",
     "email": "user@example.com",
     "first_name": "John",
     "last_name": "Doe",
     "full_name": "John Doe",
-    "date_joined": "2025-07-24T13:30:00Z"
+    "date_joined": "2026-04-22T13:30:00Z"
   },
   "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
   "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 }
 ```
-
-**Validation**:
-- Email must be unique and valid format
-- Password must pass Django's validation rules
-- Password confirmation must match
-- First/last names are optional
 
 ### 2. User Login
 
@@ -83,12 +79,12 @@ All authentication endpoints are prefixed with `/api/auth/`
 ```json
 {
   "user": {
-    "id": 1,
+    "id": "01J9H9F1V2X3Y4Z5A6B7C8D9E0",
     "email": "user@example.com",
     "first_name": "John",
     "last_name": "Doe",
     "full_name": "John Doe",
-    "date_joined": "2025-07-24T13:30:00Z"
+    "date_joined": "2026-04-22T13:30:00Z"
   },
   "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
   "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
@@ -110,50 +106,6 @@ All authentication endpoints are prefixed with `/api/auth/`
 ```json
 {
   "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-}
-```
-
-### 4. User Profile
-
-**Endpoint**: `GET /api/auth/profile/`
-
-**Headers**: `Authorization: Bearer <access_token>`
-
-**Response** (200 OK):
-```json
-{
-  "id": 1,
-  "email": "user@example.com",
-  "first_name": "John",
-  "last_name": "Doe",
-  "full_name": "John Doe",
-  "date_joined": "2025-07-24T13:30:00Z"
-}
-```
-
-### 5. Update Profile
-
-**Endpoint**: `PUT /api/auth/profile/` or `PATCH /api/auth/profile/`
-
-**Headers**: `Authorization: Bearer <access_token>`
-
-**Request Body** (partial update with PATCH):
-```json
-{
-  "first_name": "Jane",
-  "last_name": "Smith"
-}
-```
-
-**Response** (200 OK):
-```json
-{
-  "id": 1,
-  "email": "user@example.com",
-  "first_name": "Jane",
-  "last_name": "Smith",
-  "full_name": "Jane Smith",
-  "date_joined": "2025-07-24T13:30:00Z"
 }
 ```
 
@@ -179,217 +131,39 @@ SIMPLE_JWT = {
 
 ## Frontend Integration
 
-### JavaScript Example
+### Pinia Auth Store
+
+The central authentication state is managed in `client/src/stores/auth.js`.
 
 ```javascript
-class AuthService {
-  constructor() {
-    this.baseURL = '/api/auth';
-  }
+import { useAuthStore } from '@/stores/auth'
 
-  // Register new user
-  async register(userData) {
-    const response = await fetch(`${this.baseURL}/register/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      this.storeTokens(data.access, data.refresh);
-      return data.user;
-    }
-    throw new Error('Registration failed');
-  }
-
-  // Login user
-  async login(email, password) {
-    const response = await fetch(`${this.baseURL}/login/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      this.storeTokens(data.access, data.refresh);
-      return data.user;
-    }
-    throw new Error('Login failed');
-  }
-
-  // Make authenticated requests
-  async makeAuthenticatedRequest(url, options = {}) {
-    const token = localStorage.getItem('access_token');
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...options.headers
-    };
-
-    let response = await fetch(url, { ...options, headers });
-    
-    // If token expired, try to refresh
-    if (response.status === 401) {
-      const refreshed = await this.refreshToken();
-      if (refreshed) {
-        headers['Authorization'] = `Bearer ${localStorage.getItem('access_token')}`;
-        response = await fetch(url, { ...options, headers });
-      }
-    }
-    
-    return response;
-  }
-
-  // Refresh access token
-  async refreshToken() {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) return false;
-
-    try {
-      const response = await fetch(`${this.baseURL}/token/refresh/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh: refreshToken })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('access_token', data.access);
-        return true;
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-    }
-    
-    this.logout();
-    return false;
-  }
-
-  // Store tokens
-  storeTokens(accessToken, refreshToken) {
-    localStorage.setItem('access_token', accessToken);
-    localStorage.setItem('refresh_token', refreshToken);
-  }
-
-  // Logout user
-  logout() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-  }
-
-  // Check if user is authenticated
-  isAuthenticated() {
-    return !!localStorage.getItem('access_token');
-  }
-}
-
-// Usage
-const auth = new AuthService();
+const auth = useAuthStore()
 
 // Login
-auth.login('user@example.com', 'password123')
-  .then(user => console.log('Logged in:', user))
-  .catch(err => console.error('Login error:', err));
+await auth.login({ email: '...', password: '...' })
 
-// Get profile
-auth.makeAuthenticatedRequest('/api/auth/profile/')
-  .then(response => response.json())
-  .then(profile => console.log('Profile:', profile));
+// Check status
+console.log(auth.isAuthenticated)
+console.log(auth.user)
+
+// Logout
+auth.logout()
 ```
 
-### Vue 3 Composition API Example
+### Axios Client & Interceptors
+
+The `client/src/apiClient/client.js` is pre-configured with interceptors to:
+1. Automatically inject the `Authorization: Bearer <token>` header for all requests if a token exists.
+2. Intercept `401 Unauthorized` responses, attempt to refresh the token automatically, and retry the original request.
+3. Redirect to `/login` if the refresh token has also expired.
 
 ```javascript
-// composables/useAuth.js
-import { ref, computed } from 'vue'
+import { client } from '@/apiClient/client'
 
-const user = ref(null)
-const tokens = ref({
-  access: localStorage.getItem('access_token'),
-  refresh: localStorage.getItem('refresh_token')
-})
-
-export function useAuth() {
-  const isAuthenticated = computed(() => !!tokens.value.access)
-
-  const login = async (email, password) => {
-    try {
-      const response = await fetch('/api/auth/login/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        tokens.value.access = data.access
-        tokens.value.refresh = data.refresh
-        user.value = data.user
-        
-        localStorage.setItem('access_token', data.access)
-        localStorage.setItem('refresh_token', data.refresh)
-        
-        return true
-      }
-    } catch (error) {
-      console.error('Login failed:', error)
-    }
-    return false
-  }
-
-  const logout = () => {
-    tokens.value.access = null
-    tokens.value.refresh = null
-    user.value = null
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-  }
-
-  return {
-    user,
-    tokens,
-    isAuthenticated,
-    login,
-    logout
-  }
-}
+// Tokens are handled automatically
+const response = await client.get('/some-protected-endpoint/')
 ```
-
-## Error Handling
-
-### Common Error Responses
-
-**400 Bad Request** - Validation errors:
-```json
-{
-  "email": ["This field is required."],
-  "password": ["This password is too short."]
-}
-```
-
-**401 Unauthorized** - Invalid credentials:
-```json
-{
-  "detail": "Invalid email or password."
-}
-```
-
-**403 Forbidden** - Permission denied:
-```json
-{
-  "detail": "You do not have permission to perform this action."
-}
-```
-
-## Security Considerations
-
-1. **Token Storage**: Store JWT tokens securely (consider httpOnly cookies for production)
-2. **HTTPS**: Always use HTTPS in production
-3. **Token Expiration**: Access tokens expire after 1 hour
-4. **Refresh Rotation**: Refresh tokens are rotated and old ones blacklisted
-5. **Password Validation**: Django's built-in password validators are enforced
 
 ## Django Admin Integration
 
@@ -424,6 +198,7 @@ class AuthenticationTestCase(TestCase):
         }
 
     def test_user_registration(self):
+        # Ensure register is uncommented in urls.py for this test
         response = self.client.post('/api/auth/register/', self.user_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn('access', response.data)
@@ -444,11 +219,3 @@ class AuthenticationTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
 ```
-
-## Migration Notes
-
-When setting up the authentication system:
-
-1. **Initial Migration**: Run `python manage.py makemigrations users` and `python manage.py migrate`
-2. **Existing Projects**: If you have existing users, you'll need a data migration
-3. **Superuser**: Create with `python manage.py createsuperuser` (will prompt for email instead of username)

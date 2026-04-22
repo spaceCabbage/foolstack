@@ -1,0 +1,23 @@
+[project]
+name = "foolstack-server"
+version = "1.0.0"
+description = "Foolstack Modern Template Server"
+requires-python = ">=3.14"
+dependencies = [
+    "django-redis==5.4.0",
+    "django==6.0.4",
+    "djangorestframework==3.17.1",
+    "djangorestframework-simplejwt==5.5.0",
+    "gunicorn==23.0.0",
+    "loguru==0.7.3",
+    "psycopg[binary]==3.3.3",
+    "python-dotenv==1.1.1",
+    "redis==5.2.1",
+    "resend==2.26.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest-django==4.11.1",
+    "pytest==8.4.2",
+]

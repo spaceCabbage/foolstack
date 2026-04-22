@@ -14,7 +14,7 @@
 
 ## Overview
 
-Foolstack is a production-ready full-stack template featuring Django REST API, Vue 3 SPA, Redis, Celery, and automatic HTTPS via Caddy.
+Foolstack is a production-ready full-stack template featuring Django 6.0 REST API, Vue 3 SPA, Redis, PostgreSQL 16, and automatic HTTPS via Caddy.
 
 <div align="center">
 
@@ -38,7 +38,7 @@ Foolstack is a production-ready full-stack template featuring Django REST API, V
 | [API Reference](./api-reference.md)   | REST endpoints, request/response formats          | Complete |
 | [Authentication](./authentication.md) | JWT auth, custom user model, frontend integration | Complete |
 | [Template Usage](./TEMPLATE_USAGE.md) | How to customize this template for your project   | Complete |
-| [AI Instructions](../CLAUDE.md)       | Instructions for AI pair programming              | Complete |
+| [AI Instructions](../AGENTS.md)       | Instructions for AI pair programming              | Complete |
 
 </div>
 
@@ -66,12 +66,12 @@ graph TB
     end
 
     subgraph "Background Processing"
-        Celery[Celery Worker]
+        Tasks[Native Async Tasks]
     end
 
     subgraph "Data Layer"
         Redis[(Redis)]
-        SQLite[(SQLite)]
+        Postgres[(PostgreSQL)]
     end
 
     User --> SSL
@@ -81,10 +81,10 @@ graph TB
     Router -->|"/api/*"| Django
     Router -->|"/admin/*"| Admin
 
-    Django --> SQLite
+    Django --> Postgres
     Django --> Redis
-    Celery --> Redis
-    Celery --> SQLite
+    Tasks --> Postgres
+    Tasks --> Redis
 
     Vue -.->|"API calls"| Django
 ```
@@ -100,7 +100,7 @@ graph TB
    - `/admin/*` → Django Admin
 3. **Authentication** → JWT token validation
 4. **Business Logic** → Django views/serializers
-5. **Data Access** → SQLite + Redis cache
+5. **Data Access** → PostgreSQL + Redis cache
 6. **Response** → JSON back through Caddy
 
 ### Technology Stack
@@ -110,10 +110,10 @@ graph TB
 <td width="25%">
 
 #### Backend
-- **Framework**: Django 5.1
+- **Framework**: Django 6.0
 - **API**: Django REST Framework
 - **Auth**: SimpleJWT
-- **Tasks**: Celery
+- **Tasks**: Native Threaded Tasks
 - **Logging**: Loguru
 
 </td>
@@ -121,18 +121,18 @@ graph TB
 
 #### Frontend
 - **Framework**: Vue 3
-- **Build**: Vite
-- **Styling**: Tailwind CSS
-- **HTTP**: Axios
+- **Build**: Vite 8
+- **Styling**: Tailwind CSS 4
+- **HTTP**: Axios (Interceptors)
 - **Routing**: Vue Router
 
 </td>
 <td width="25%">
 
 #### Data
-- **Database**: SQLite
-- **Cache**: Redis
-- **Broker**: Redis
+- **Database**: PostgreSQL 16
+- **Cache**: Redis 7
+- **Session**: Redis 7
 - **Files**: Local storage
 
 </td>
@@ -156,8 +156,8 @@ graph TB
 |----------|-------------------|---------------------|-----------------|
 | `server` | Django + Gunicorn | REST API            | 8000 (internal) |
 | `client` | Vue + Vite        | Frontend SPA        | 5173 (internal) |
-| `worker` | Celery            | Background tasks    | -               |
-| `redis`  | Redis 7           | Cache + broker      | 6379            |
+| `db`     | PostgreSQL 16     | Primary database    | 5432            |
+| `redis`  | Redis 7           | Cache + session     | 6379            |
 | `caddy`  | Caddy 2           | Reverse proxy + SSL | 80, 443         |
 
 ### Compose Overlay Pattern
@@ -189,13 +189,13 @@ PROJECT_NAME=foolstack      # Container/volume naming
 DOMAIN=localhost            # Your domain
 ENVIRONMENT=development     # development or production
 SECRET_KEY=<generated>      # Django secret key
+POSTGRES_PASSWORD=...       # Database password
 ```
 
 ### Optional Variables
 
 ```env
 LOG_LEVEL=INFO              # DEBUG, INFO, WARNING, ERROR
-DATABASE_NAME=db.sqlite3    # SQLite filename
 CADDY_EMAIL=admin@...       # Let's Encrypt notifications
 ```
 
@@ -209,6 +209,7 @@ CADDY_HTTPS_PORT=443
 SERVER_PORT=8000
 CLIENT_PORT=5173
 REDIS_PORT=6379
+POSTGRES_PORT=5432
 ```
 
 ## Development Workflow
@@ -224,9 +225,9 @@ make down        # Stop services
 
 ### Adding Features
 
-1. Create Django app: `make shell` then `python manage.py startapp myapp`
+1. Create Django app: `make manage startapp myapp`
 2. Add to `INSTALLED_APPS` in `server/core/settings.py`
-3. Create models, serializers, views
+3. Create models (inheriting from `core.models.BaseModel`), serializers, views
 4. Add URL route in `server/core/urls.py`
 5. Run `make migrations && make migrate`
 
@@ -242,7 +243,7 @@ make test-coverage     # With coverage report
 - **HTTPS Everywhere**: Self-signed (dev), Let's Encrypt (prod)
 - **Non-root Containers**: Server runs as `appuser` (UID 1000)
 - **JWT Authentication**: Short-lived access tokens + refresh rotation
-- **CSRF Protection**: Enabled for session-based admin
+- **CSRF Protection**: Handled via secure cookies for session-based admin
 - **Security Headers**: Via Caddy (X-Frame-Options, etc.)
 
 ---

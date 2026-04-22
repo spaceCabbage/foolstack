@@ -42,16 +42,19 @@ else:
 
 AUTH_USER_MODEL = "users.User"
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+TIME_ZONE = os.getenv("TIME_ZONE", "UTC")
 USE_I18N = True
 USE_TZ = True
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 ROOT_URLCONF = "core.urls"
 STATIC_URL = "/static/"
-STATIC_ROOT = "/data/staticfiles"
 MEDIA_URL = "/media/"
-MEDIA_ROOT = "/data/mediafiles"
-LOGS_DIR = "/data/logs"
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+STATIC_ROOT = BASE_DIR.parent / "data" / "staticfiles"
+MEDIA_ROOT = BASE_DIR.parent / "data" / "mediafiles"
+LOGS_DIR = BASE_DIR.parent / "data" / "logs"
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -62,7 +65,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
-    "django_celery_results",
+    "core",
     "users",
 ]
 
@@ -108,11 +111,6 @@ LOGGING = {
             "level": LOG_LEVEL,
             "propagate": False,
         },
-        "celery": {
-            "handlers": ["default"],
-            "level": LOG_LEVEL,
-            "propagate": False,
-        },
     },
 }
 
@@ -133,11 +131,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-# Database - SQLite by default
+# Database Configuration
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "db")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "/data/" + os.getenv("DATABASE_NAME", "db.sqlite3"),
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": POSTGRES_DB,
+        "USER": POSTGRES_USER,
+        "PASSWORD": POSTGRES_PASSWORD,
+        "HOST": POSTGRES_HOST,
+        "PORT": POSTGRES_PORT,
+        "CONN_MAX_AGE": 600,
     }
 }
 
@@ -171,18 +180,15 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
+
 # ========================================
-# Celery Configuration
+# Django 6.0 Tasks Configuration
 # ========================================
-CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = "django-db"  # Store results in DB for admin visibility
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+TASKS = {
+    "default": {
+        "BACKEND": "core.tasks.ThreadedTaskBackend",
+    },
+}
 
 # ========================================
 # REST Framework Configuration
@@ -195,7 +201,6 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
-    "EXCEPTION_HANDLER": "core.exceptions.custom_exception_handler",
     "DEFAULT_THROTTLE_RATES": {
         "anon": "100/hour",
         "user": "1000/hour",
@@ -223,6 +228,13 @@ SIMPLE_JWT = {
     "TOKEN_TYPE_CLAIM": "token_type",
 }
 
+
+# Session and CSRF settings
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # Allow frontend to read CSRF token
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
 # ========================================
 # Security Settings (Production)
 # ========================================
@@ -247,22 +259,5 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", f"noreply@{DOMAIN}")
 PASSWORD_RESET_TIMEOUT = int(os.getenv("PASSWORD_RESET_TIMEOUT", "3600"))  # 1 hour
 
-# Smart backend selection:
-# - No RESEND_API_KEY -> console + warning
-# - Otherwise -> Resend
-_use_console_email = DEBUG or LOG_LEVEL == "DEBUG" or not RESEND_API_KEY
-
-if not RESEND_API_KEY and not DEBUG:
-    import warnings
-
-    warnings.warn(
-        "RESEND_API_KEY not set! Emails will be logged to console. "
-        "Set RESEND_API_KEY in .env for production email delivery.",
-        stacklevel=1,
-    )
-
-EMAIL_BACKEND = (
-    "django.core.mail.backends.console.EmailBackend"
-    if _use_console_email
-    else "core.email.ResendEmailBackend"
-)
+# All emails are dispatched via background tasks in Django 6.0
+EMAIL_BACKEND = "core.email.AsyncDispatcherEmailBackend"

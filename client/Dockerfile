@@ -1,5 +1,5 @@
 # Bun-based multi-stage build for ultra-fast installs
-FROM oven/bun:1 AS base
+FROM oven/bun:1.2-alpine AS base
 
 WORKDIR /app
 

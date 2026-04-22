@@ -1,69 +1,100 @@
-"""
-Custom Django email backend using Resend SDK.
-
-Usage:
-    Set EMAIL_BACKEND in settings.py or let it auto-configure:
-    - DEBUG mode or LOG_LEVEL=DEBUG: uses console backend
-    - No RESEND_API_KEY: uses console backend + logs warning
-    - RESEND_API_KEY set: uses this Resend backend
-"""
+import logging
+from typing import Any
 
 import resend
 from django.conf import settings
 from django.core.mail.backends.base import BaseEmailBackend
-from loguru import logger
+from django.core.mail.backends.console import EmailBackend as ConsoleBackend
+
+logger = logging.getLogger(__name__)
 
 
 class ResendEmailBackend(BaseEmailBackend):
-    """Django email backend that sends emails via Resend API."""
+    """
+    Email backend for Resend API.
+    """
 
     def __init__(self, fail_silently=False, **kwargs):
         super().__init__(fail_silently=fail_silently)
-        if not settings.RESEND_API_KEY:
-            raise ValueError(
-                "RESEND_API_KEY is required for ResendEmailBackend. "
-                "Set it in your .env file or use console backend for development."
-            )
-        resend.api_key = settings.RESEND_API_KEY
+        if settings.RESEND_API_KEY:
+            resend.api_key = settings.RESEND_API_KEY
 
     def send_messages(self, email_messages):
-        """Send one or more EmailMessage objects and return the number sent."""
-        if not email_messages:
+        if not email_messages or not settings.RESEND_API_KEY:
             return 0
 
-        sent_count = 0
+        count = 0
         for message in email_messages:
             try:
-                params = {
-                    "from": message.from_email,
-                    "to": list(message.to),
+                # Determine content type (HTML vs Text)
+                is_html = message.content_subtype == "html"
+
+                params: dict[str, Any] = {
+                    "from": message.from_email or settings.DEFAULT_FROM_EMAIL,
+                    "to": message.to,
                     "subject": message.subject,
-                    "text": message.body,
                 }
 
-                # Handle HTML content (from EmailMultiAlternatives)
-                alternatives = getattr(message, "alternatives", None)
-                if alternatives:
-                    for content, mimetype in alternatives:
-                        if mimetype == "text/html":
-                            params["html"] = content
-                            break
+                if is_html:
+                    params["html"] = message.body
+                else:
+                    params["text"] = message.body
 
-                # Handle CC, BCC, Reply-To
-                if message.cc:
-                    params["cc"] = list(message.cc)
-                if message.bcc:
-                    params["bcc"] = list(message.bcc)
-                if message.reply_to:
-                    params["reply_to"] = message.reply_to[0]
-
-                response = resend.Emails.send(params)  # type: ignore[arg-type]
-                logger.debug(f"Email sent via Resend: {response.get('id', 'unknown')}")
-                sent_count += 1
-
+                resend.Emails.send(params)
+                count += 1
             except Exception as e:
-                logger.error(f"Failed to send email via Resend: {e}")
+                logger.error(f"Resend API error: {str(e)}")
                 if not self.fail_silently:
                     raise
+        return count
 
-        return sent_count
+
+class SmartEmailBackend(BaseEmailBackend):
+    """
+    Unified backend:
+    - Dev: Console + Resend (if key exists)
+    - Prod: Resend only (if key exists)
+    """
+
+    def __init__(self, fail_silently=False, **kwargs):
+        super().__init__(fail_silently=fail_silently)
+        self.console = ConsoleBackend()
+        self.resend = ResendEmailBackend(fail_silently=fail_silently)
+
+    def send_messages(self, email_messages):
+        # 1. Always log to console in development
+        if settings.DEBUG:
+            self.console.send_messages(email_messages)
+
+        # 2. Send via Resend if key exists
+        if settings.RESEND_API_KEY:
+            return self.resend.send_messages(email_messages)
+
+        return len(list(email_messages)) if settings.DEBUG else 0
+
+
+class AsyncDispatcherEmailBackend(BaseEmailBackend):
+    """
+    Default Django Email Backend that enqueues emails into the
+    Django 6.0 task system for asynchronous processing.
+    """
+
+    def send_messages(self, email_messages):
+        from core.tasks import send_email_task
+
+        serialized_messages = []
+        for msg in email_messages:
+            serialized_messages.append(
+                {
+                    "subject": msg.subject,
+                    "body": msg.body,
+                    "from_email": msg.from_email or settings.DEFAULT_FROM_EMAIL,
+                    "to": msg.to,
+                    "content_subtype": msg.content_subtype,
+                }
+            )
+
+        if serialized_messages:
+            send_email_task.enqueue(serialized_messages)
+
+        return len(list(email_messages))

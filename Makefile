@@ -18,7 +18,8 @@ help:
 	@echo "  make setup          - First-time setup (creates .env, builds, installs deps)"
 	@echo "  make up             - Start services (detached)"
 	@echo "  make down           - Stop all services"
-	@echo "  make restart        - Restart all services"
+	@echo "  make restart        - Restart app services (server, client, caddy)"
+	@echo "  make restart-all    - Full restart (down + up, including DB/Redis)"
 	@echo "  make logs [FLAGS]   - Follow logs (run 'make logs h' for service flags)"
 	@echo "  make status         - Show system status and health"
 	@echo "  make urls           - Show access URLs"
@@ -47,16 +48,11 @@ deps:
 	@echo "=========================================="
 	@echo ""
 	@echo "📦 Syncing Python dependencies..."
-	@if [ ! -d server/.venv ]; then \
-		echo "⚠️  Local venv doesn't exist. Creating it..."; \
-		cd server && python3 -m venv --copies .venv; \
-	fi
-	@cd server && .venv/bin/pip install --upgrade pip -q
-	@cd server && .venv/bin/pip install -r requirements.txt
+	@cd server && uv sync --no-install-project
 	@echo "✅ Python venv updated"
 	@echo ""
 	@echo "📦 Syncing Bun dependencies..."
-	@cd client && bun install --frozen-lockfile 2>/dev/null || cd client && bun install
+	@cd client && bun install
 	@echo "✅ Bun dependencies synced"
 	@echo ""
 	@echo "💡 Run 'make build' to update Docker images"
@@ -172,9 +168,15 @@ down:
 	@docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
 	@echo "✅ Services stopped"
 
-# Restart all services (down + up)
+# Restart app services only (server, client, caddy)
 restart:
-	@echo "Restarting all services..."
+	@echo "Restarting app services (server, client, caddy)..."
+	@docker-compose restart server client caddy
+	@echo "✅ App services restarted"
+
+# Restart all services (down + up)
+restart-all:
+	@echo "Restarting all services (including database and redis)..."
 	@$(MAKE) down
 	@$(MAKE) up
 
@@ -182,9 +184,9 @@ restart:
 # Usage:
 #   make logs        → all services
 #   make logs s      → server only
-#   make logs scw    → server, client, worker
+#   make logs sc     → server, client
 #   make logs h      → show help
-# Flags: s (server), c (client), w (worker), r (redis), d (caddy)
+# Flags: s (server), c (client), r (redis), d (caddy)
 logs:
 	@ARGS="$(filter-out $@,$(MAKECMDGOALS))"; \
 	SERVICES=""; \
@@ -198,22 +200,18 @@ logs:
 		echo "View logs from specific services by combining flag characters:"; \
 		echo "  s  Server (Django backend)"; \
 		echo "  c  Client (Vue frontend)"; \
-		echo "  w  Worker (Celery worker)"; \
 		echo "  r  Redis"; \
 		echo "  d  Caddy (reverse proxy)"; \
 		echo ""; \
 		echo "Examples:"; \
-		echo "  make logs sw       Watch server and worker"; \
-		echo "  make logs scw      Watch frontend, backend, and worker"; \
+		echo "  make logs s        Watch server"; \
+		echo "  make logs sc       Watch frontend and backend"; \
 	else \
 		case "$$ARGS" in \
 			*s*) SERVICES="$$SERVICES server";; \
 		esac; \
 		case "$$ARGS" in \
 			*c*) SERVICES="$$SERVICES client";; \
-		esac; \
-		case "$$ARGS" in \
-			*w*) SERVICES="$$SERVICES worker";; \
 		esac; \
 		case "$$ARGS" in \
 			*r*) SERVICES="$$SERVICES redis";; \
@@ -286,7 +284,7 @@ purge:
 	@echo "Stopping services..."
 	@docker-compose -f docker-compose.yml -f docker-compose.dev.yml down -v
 	@echo "Removing volumes..."
-	@docker volume rm $(PROJECT_NAME)_redis_data 2>/dev/null || true
+	@docker volume rm $(PROJECT_NAME)_redis_data $(PROJECT_NAME)_db_data 2>/dev/null || true
 	@echo "Removing generated files (keeping .gitkeep)..."
 	@find data -type f ! -name '.gitkeep' -delete 2>/dev/null || true
 	@echo ""
